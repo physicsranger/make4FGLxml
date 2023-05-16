@@ -43,7 +43,6 @@ class ControlWidget(QWidget):
         self.first_row=QWidget(parent=self)
         #create widgets for inputing catalog file
         self.catalog_button=QPushButton("Catalog",parent=self.first_row)
-        self.catalog_button.setCheckable(True)
         self.catalog_button.clicked.connect(self.choose_catalog)
         self.catalog_button.setFixedWidth(100)
         
@@ -65,10 +64,10 @@ class ControlWidget(QWidget):
 
         #create widgets relating to output file
         self.save_directory_button=QPushButton("Save Directory",parent=self.second_row)
-        self.save_directory_button.setCheckable(True)
         self.save_directory_button.clicked.connect(self.choose_save_directory)
-        self.save_directory_entry=QLineEdit(os.getcwd(),parent=self.second_row)
         self.save_directory_button.setFixedWidth(100)
+        
+        self.save_directory_entry=QLineEdit(os.getcwd(),parent=self.second_row)
         self.save_directory_entry.setFixedWidth(400)
 
         self.output_file_label=QLabel('Output File:',parent=self.second_row)
@@ -114,7 +113,6 @@ class ControlWidget(QWidget):
         #allow user to instead choose an event file to get the ROI center information
         self.or_label=QLabel(' or ',parent=self.fourth_row)
         self.use_event_file_button=QPushButton("Get From Event File",parent=self.fourth_row)
-        self.use_event_file_button.setCheckable(True)
         self.use_event_file_button.clicked.connect(self.get_ROI_center)
         self.use_event_file_button.setFixedWidth(125)
         
@@ -185,7 +183,6 @@ class ControlWidget(QWidget):
 
         self.galactic_model_file_label=QLabel('File Path For Galactic Diffuse Model:',parent=self.ninth_row)
         self.galactic_model_file_button=QPushButton("Change File",parent=self.ninth_row)
-        self.galactic_model_file_button.setCheckable(True)
         self.galactic_model_file_button.clicked.connect(self.choose_galactic_model_file)
         self.galactic_model_file_button.setFixedWidth(100)
 
@@ -205,7 +202,6 @@ class ControlWidget(QWidget):
 
         self.isotropic_template_file_label=QLabel('File Path For Isotropic Template:',parent=self.tenth_row)
         self.isotropic_template_file_button=QPushButton("Change File",parent=self.tenth_row)
-        self.isotropic_template_file_button.setCheckable(True)
         self.isotropic_template_file_button.clicked.connect(self.choose_isotropic_template_file)
         self.isotropic_template_file_button.setFixedWidth(100)
 
@@ -229,7 +225,6 @@ class ControlWidget(QWidget):
                                                       parent=self.eleventh_row)
         self.extended_template_directory_button=QPushButton("Change Directory",
                                                             parent=self.eleventh_row)
-        self.extended_template_directory_button.setCheckable(True)
         self.extended_template_directory_button.clicked.connect(self.choose_extended_directory)
         self.extended_template_directory_button.setFixedWidth(125)
 
@@ -238,12 +233,10 @@ class ControlWidget(QWidget):
         
         #now we need a button to actually make the files
         self.make_model_button=QPushButton('Make Model',parent=self.twelvth_row)
-        self.make_model_button.setCheckable(True)
         self.make_model_button.clicked.connect(self.create_model)
         
         #and finish it off with a 'Quit' button
         self.quit_button=QPushButton("Quit",parent=self.twelvth_row)
-        self.quit_button.setCheckable(True)
         self.quit_button.clicked.connect(self.quit_application)
 
         self.make_model_button.setFixedWidth(100)
@@ -449,6 +442,9 @@ class ControlWidget(QWidget):
     def choose_catalog(self):
         #do stuff to open a file browser so the user can choose the catalog file
         #and then assign the choice to the catalog_entry and catlog value
+        catalog_file_name=QFileDialog.getOpenFileName(self,'Choose Catalog File',
+                        os.getcwd(),"Fermi LAT catlog files (gll_psc*)")[0]
+        self.catalog_entry.setText(catalog_file_name)
         return
         
     def choose_save_directory(self):
