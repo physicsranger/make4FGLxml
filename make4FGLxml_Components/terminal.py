@@ -22,7 +22,7 @@ class TerminalWidget(QWidget):
         #start things out as readOnly after adding some intro text
         #figure out a way to access the version number without hardcoding it here
         self.terminal_out.setMarkdown('## Welcome to the make4FGLxml GUI\n---')
-       self.terminal_out.append('')
+        self.terminal_out.append('')
         self.terminal_out.moveCursor(QTextCursor().MoveOperation(11))
         self.terminal_out.setReadOnly(True)
 

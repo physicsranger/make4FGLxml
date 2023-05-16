@@ -43,7 +43,6 @@ class ControlWidget(QWidget):
         self.first_row=QWidget(parent=self)
         #create widgets for inputing catalog file
         self.catalog_button=QPushButton("Catalog",parent=self.first_row)
-        self.catalog_button.setCheckable(True)
         self.catalog_button.clicked.connect(self.choose_catalog)
         self.catalog_button.setFixedWidth(100)
         
@@ -65,10 +64,10 @@ class ControlWidget(QWidget):
 
         #create widgets relating to output file
         self.save_directory_button=QPushButton("Save Directory",parent=self.second_row)
-        self.save_directory_button.setCheckable(True)
         self.save_directory_button.clicked.connect(self.choose_save_directory)
-        self.save_directory_entry=QLineEdit(os.getcwd(),parent=self.second_row)
         self.save_directory_button.setFixedWidth(100)
+        
+        self.save_directory_entry=QLineEdit(os.getcwd(),parent=self.second_row)
         self.save_directory_entry.setFixedWidth(400)
 
         self.output_file_label=QLabel('Output File:',parent=self.second_row)
@@ -114,7 +113,6 @@ class ControlWidget(QWidget):
         #allow user to instead choose an event file to get the ROI center information
         self.or_label=QLabel(' or ',parent=self.fourth_row)
         self.use_event_file_button=QPushButton("Get From Event File",parent=self.fourth_row)
-        self.use_event_file_button.setCheckable(True)
         self.use_event_file_button.clicked.connect(self.get_ROI_center)
         self.use_event_file_button.setFixedWidth(125)
         
@@ -185,7 +183,6 @@ class ControlWidget(QWidget):
 
         self.galactic_model_file_label=QLabel('File Path For Galactic Diffuse Model:',parent=self.ninth_row)
         self.galactic_model_file_button=QPushButton("Change File",parent=self.ninth_row)
-        self.galactic_model_file_button.setCheckable(True)
         self.galactic_model_file_button.clicked.connect(self.choose_galactic_model_file)
         self.galactic_model_file_button.setFixedWidth(100)
 
@@ -205,7 +202,6 @@ class ControlWidget(QWidget):
 
         self.isotropic_template_file_label=QLabel('File Path For Isotropic Template:',parent=self.tenth_row)
         self.isotropic_template_file_button=QPushButton("Change File",parent=self.tenth_row)
-        self.isotropic_template_file_button.setCheckable(True)
         self.isotropic_template_file_button.clicked.connect(self.choose_isotropic_template_file)
         self.isotropic_template_file_button.setFixedWidth(100)
 
@@ -229,7 +225,6 @@ class ControlWidget(QWidget):
                                                       parent=self.eleventh_row)
         self.extended_template_directory_button=QPushButton("Change Directory",
                                                             parent=self.eleventh_row)
-        self.extended_template_directory_button.setCheckable(True)
         self.extended_template_directory_button.clicked.connect(self.choose_extended_directory)
         self.extended_template_directory_button.setFixedWidth(125)
 
@@ -238,12 +233,10 @@ class ControlWidget(QWidget):
         
         #now we need a button to actually make the files
         self.make_model_button=QPushButton('Make Model',parent=self.twelvth_row)
-        self.make_model_button.setCheckable(True)
         self.make_model_button.clicked.connect(self.create_model)
         
         #and finish it off with a 'Quit' button
         self.quit_button=QPushButton("Quit",parent=self.twelvth_row)
-        self.quit_button.setCheckable(True)
         self.quit_button.clicked.connect(self.quit_application)
 
         self.make_model_button.setFixedWidth(100)
@@ -446,36 +439,101 @@ class ControlWidget(QWidget):
 
         self.twelvth_row.setLayout(self.twelvth_row_layout)
 
+    #function to open a file dialog window and select the catalog file
     def choose_catalog(self):
-        #do stuff to open a file browser so the user can choose the catalog file
-        #and then assign the choice to the catalog_entry and catlog value
+        #first, determine the starting directory
+        start_dir=(os.getcwd() if self.fermi_dir is None else self.fermi_dir)
+
+        #open the file dialog to select the catalog file
+        catalog_file_name=QFileDialog.getOpenFileName(self,'Choose Catalog File',start_dir,
+                        "Fermi LAT catlog files (gll_psc*);;FITS files (*.fit*);;XML files (*.xml);;All Files(*)")[0]
+
+        #set the returned value to the corresponding entry
+        self.catalog_entry.setText(catalog_file_name)
         return
-        
+
+    #function to open a file dialog window to select the save location
     def choose_save_directory(self):
-        #do stuff to open a file browser and choose a directory to save the output
-        #xml model (and possible .reg file) in
+        #first, determine the starting directory
+        start_dir=(self.save_directory_entry.text()\
+                   if os.path.exists(self.save_directory_entry.text()) else os.getcwd())
+        
+        #open file dialog to select a directory
+        save_directory=QFileDialog.getExistingDirectory(self,'Choose Save Directory',start_dir)
+
+        #set the returned value to the corresponding entry
+        self.save_directory_entry.setText(save_directory)
         return
 
+    #function to open a file dialog window to select the directory with the extended source
+    #template files named in the catalog file
     def choose_extended_directory(self):
-        #do stuff to open a file browser and specify the directory with the extended source files
+        #first, determine the starting directory for the file dialog
+        start_dir=(self.extended_template_directory_entry.text()\
+                   if os.path.exists(self.extended_template_directory_entry.text()) else os.getcwd())
+
+        #open up the dialog
+        extended_directory=QFileDialog.getExistingDirectory(self,
+                                'Choose Extended Source Templates Directory',start_dir)
+
+        #set this as the corresponding entry text
+        self.extended_template_directory_entry.setText(extended_directory)
         return
 
+    #function to choose the Galactic diffuse model file
     def choose_galactic_model_file(self):
-        #do stuff to open a file browser and choose a file for the Galactic diffuse model
+        #first, determine the starting directory for the file dialog
+        start_dir=(self.galactic_model_file_entry.text()\
+                   if os.path.exists(self.galactic_model_file_entry.text()) else os.getcwd())
+
+        #open up the dialog
+        galactic_file=QFileDialog.getOpenFileName(self,'Choose Galactic Diffuse Model File',
+                                        start_dir,'FITS files (*.fit*);;All Files (*)')[0]
+
+        #set the returned value as the corresponding entry text
+        self.galactic_model_file_entry.setText(galactic_file)
         return
 
+    #function to choose the Isotropic diffuse component template file
     def choose_isotropic_template_file(self):
-        #do stuff to open a file browser and choose a file for the isotropic diffuse template
+        #first, determine the starting directory
+        start_dir=(self.isotropic_template_file_entry.text()\
+                   if os.path.exists(self.isotropic_template_file_entry.text()) else os.getcwd())
+
+        #open up the dialot
+        isotropic_file=QFileDialog.getOpenFileName(self,'Choose Isotropic Component Template File',
+                            start_dir,'Text files (*.txt);;All Files (*)')[0]
+
+        #set the returned value as the corresponding entry text
+        self.isotropic_template_file_entry.setText(isotropic_file)
         return
 
+    #function to get the region of interest information from an event file
     def get_ROI_center(self):
-        #do stuff to open a file browser and choose an event file to get the ROI
-        #center information from, and get that info and fill the LineEdit widgets
+        #first, we need to determine if the current value in the event file entry is valid
+        if not os.path.exists(self.event_file_entry.text()):
+            #if we get in here, open a file dialog to choose an event file, start at the current dir
+            event_file=QFileDialog(self,'Choose Fermi LAT Event File',os.getcwd(),
+                            "FITS files (*.fit*);;All Files (*)")[0]
+            self.event_file_entry.setText(event_file)
+        else:
+            event_file=self.event_file_entry.text()
+
+        #now we feed this to one of the make4FGLxml utility functions
+        RA,DEC,radius=get_ROI_from_event_file(event_file)
+
+        #finish by setting the corresponding entry
+        self.ROI_center_RA_entry.setText(f'{RA:f}')
+        self.ROI_center_DEC_entry.setText(f'{DEC:f}')
+        self.ROI_center_radius_entry.setText(f'{radius:f}')
         return
 
     def create_model(self):
         #do stuff to make the XML file (and possible .reg file)
         print('this is only a test')
+        print(f'The RA value is {self.ROI_center_RA_entry.text()}')
+        print(f'The RA value has type {type(self.ROI_center_RA_entry.text())}')
+        print(f'Is this input acceptable? {self.ROI_center_RA_entry.hasAcceptableInput()}')
         return
 
     def quit_application(self):
