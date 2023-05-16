@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QApplication)
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt,QTimer
 from PyQt6.QtGui import QDoubleValidator
 
 class ControlWidget(QWidget):
@@ -244,7 +244,7 @@ class ControlWidget(QWidget):
         #and finish it off with a 'Quit' button
         self.quit_button=QPushButton("Quit",parent=self.twelvth_row)
         self.quit_button.setCheckable(True)
-        self.quit_button.clicked.connect(QApplication.instance().quit)
+        self.quit_button.clicked.connect(self.quit_application)
 
         self.make_model_button.setFixedWidth(100)
         self.quit_button.setFixedWidth(100)
@@ -475,5 +475,14 @@ class ControlWidget(QWidget):
 
     def create_model(self):
         #do stuff to make the XML file (and possible .reg file)
+        print('this is only a test')
         return
+
+    def quit_application(self):
+        self.main_window.terminal_widget.write('Goodbye!')
+        
+        sys.stdout=self.main_window.old_stdout
+        sys.stderr=self.main_window.old_stderr
+
+        QTimer.singleShot(1000,QApplication.instance().quit)
 
