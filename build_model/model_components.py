@@ -42,201 +42,201 @@ class Spectrum:
 
 #PowerLaw class
 class PowerLaw(Spectrum):
-    def __init__(self,prefactor=1e-12,index=2,scale_energy=1000):
+    def __init__(self,Prefactor=1e-12,Index=2,Scale=1000):
         Spectrum.__init__()
 
         #some checks on the inputs
-        if prefactor<0 or scale_energy<=0:
-            raise ValueError("Input parameters invalid, at least one of prefactor or scale_energy is negative or zero.")
+        if Prefactor<0 or Scale<=0:
+            raise ValueError("Input parameters invalid, at least one of Prefactor or Scale is negative or zero.")
         
-        self.prefactor_scale=10**np.floor(np.log10(prefactor))
-        self.prefactor=prefactor/self.prefactor_scale
-        self.index=abs(index)
-        self.scale_energy=scale_energy
+        self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
+        self.Prefactor=prefactor/self.Prefactor_scale
+        self.Index=abs(Index)
+        self.Scale=scale
 
         self.model_name='PowerLaw'
         self.norm_par='Prefactor'
 
-    def build_spectrum(self,prefactor_free=True,index_free=True):
-        self.parameters=[{'free':int(prefactor_free),'name':'Prefactor','min':0,
-                     'max':1e6,'scale':self.prefactor_scale,'value':self.prefactor}]
+    def build_spectrum(self,Prefactor_free=True,Index_free=True):
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
+                     'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
-        self.parameters.append({'free':int(index_free),'name':'Index','min':0,
-                     'max':10,'scale':-1,'value':self.index})
+        self.parameters.append({'free':int(Index_free),'name':'Index','min':0,
+                     'max':10,'scale':-1,'value':self.Index})
 
-        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.scale_energy*0.9),
-                           'max':max(500000,self.scale_energy*1.5),'scale':1,'value':self.scale_energy})
+        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.Scale*0.9),
+                           'max':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
         self.build(self.model_name,self.parameters)
 
 #PowerLaw2 class
 class PowerLaw2(Spectrum):
-    def __init__(self,integral=1e-8,index=2,lower_limit=100,upper_limit=300000):
+    def __init__(self,Integral=1e-8,Index=2,LowerLimit=100,UpperLimit=300000):
         Spectrum.__init__()
 
         #some checks on the inputs
-        if integral<0 or lower_limit<=0 or upper_limit<=0:
-            raise ValueError("Input parameters invalid, at least one of integral, lower_limit, or upper_limit is negative or zero.")
+        if Integral<0 or LowerLimit<=0 or UpperLimit<=0:
+            raise ValueError("Input parameters invalid, at least one of Integral, LowerLimit, or UpperLimit is negative or zero.")
         
-        if lower_limit>=upper_limit:
-            raise ValueError(f"Requested LowerLimit of {lower_limit:,} is >= UpperLimit of {upper_limit:,}.")
+        if LowerLimit>=UpperLimit:
+            raise ValueError(f"Requested LowerLimit of {LowerLimit:,} is >= UpperLimit of {UpperLimit:,}.")
         
-        self.integral_scale=10**np.floor(np.log10(integral))
-        self.integral=prefactor/self.integral_scale
+        self.Integral_scale=10**np.floor(np.log10(Integral))
+        self.Integral=Integral/self.Integral_scale
         self.index=abs(index)
-        self.lower_limit=lower_limit
-        self.upper_limit=upper_limit
+        self.LowerLimit=LowerLimit
+        self.UpperLimit=UpperLimit
 
         self.model_name='PowerLaw2'
         self.norm_par='Integral'
 
-    def build_spectrum(self,integral_free=True,index_free=True):
-        self.parameters=[{'free':int(integral_free),'name':'Integral','min':0,
-                     'max':1e6,'scale':self.prefactor_scale,'value':self.integral}]
+    def build_spectrum(self,Integral_free=True,Index_free=True):
+        self.parameters=[{'free':int(Integral_free),'name':'Integral','min':0,
+                     'max':1e6,'scale':self.Integral_scale,'value':self.Integral}]
 
-        self.parameters.append({'free':int(index_free),'name':'Index','min':0,
-                     'max':10,'scale':-1,'value':self.index})
+        self.parameters.append({'free':int(Index_free),'name':'Index','min':0,
+                     'max':10,'scale':-1,'value':self.Index})
 
         self.parameters.append({'free':0,'name':'LowerLimit','min':10,
-                           'max':max(500000,self.lower_limit*1.5),
-                           'scale':1,'value':self.lower_limit})
+                           'max':max(500000,self.LowerLimit*1.5),
+                           'scale':1,'value':self.LowerLimit})
 
         self.parameters.append({'free':0,'name':'UpperLimit','min':10,
-                           'max':max(500000,self.upper_limit*1.5),
-                           'scale':1,'value':self.upper_limit})
+                           'max':max(500000,self.UpperLimit*1.5),
+                           'scale':1,'value':self.UpperLimit})
 
         self.build(self.model_name,self.parameters)
 
 #PLSuperExpCutoff class
 class PLSuperExpCutoff(Spectrum):
-    def __init__(self,prefactor=1e-12,index1=2,scale_energy=1000,cutoff=1000,index2=1):
+    def __init__(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,Index2=1):
         Spectrum.__init__()
 
         #some checks on the inputs
-        if prefactor<0 or scale_energy<=0 or cutoff<=0 or index2<0:
-            raise ValueError("Input parameters invalid, at least one of prefactor, scale_energy, cutoff, or index2 is negative or zero.")
+        if Prefactor<0 or Scale<=0 or Cutoff<=0 or Index2<0:
+            raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, Cutoff, or Index2 is negative or zero.")
         
-        self.prefactor_scale=10**np.floor(np.log10(prefactor))
-        self.prefactor=prefactor/self.prefactor_scale
-        self.index1=abs(index1)
-        self.scale_energy=scale_energy
-        self.cutoff=cutoff
-        self.index2=index2
+        self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
+        self.Prefactor=Prefactor/self.Prefactor_scale
+        self.Index1=abs(Index1)
+        self.Scale=Scale
+        self.Cutoff=Cutoff
+        self.Index2=Index2
 
         self.model_name='PLSuperExpCutoff'
         self.norm_par='Prefactor'
 
-    def build_spectrum(self,prefactor_free=True,index1_free=True,cutoff_free=True,index2_free=False):
-        self.parameters=[{'free':int(prefactor_free),'name':'Prefactor','min':0,
-                     'max':1e6,'scale':self.prefactor_scale,'value':self.prefactor_value}]
+    def build_spectrum(self,Prefactor_free=True,Index1_free=True,Cutoff_free=True,Index2_free=False):
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
+                     'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
         self.parameters.append({'free':int(index1_free),'name':'Index1','min':0,
-                     'max':10,'scale':-1,'value':self.index1})
+                     'max':10,'scale':-1,'value':self.Index1})
 
-        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.scale_energy*0.9),
-                     'max':max(500000,self.scale_energy*1.5),'scale':1,'value':self.scale_energy})
+        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.Scale*0.9),
+                     'max':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
-        self.parameters.append({'free':int(cutoff_free),'name':'Cutoff','min':min(100,self.cutoff*0.9),
-                     'max':max(500000,self.cutoff*1.5),'scale':1,'value':self.cutoff})
+        self.parameters.append({'free':int(Cutoff_free),'name':'Cutoff','min':min(100,self.Cutoff*0.9),
+                     'max':max(500000,self.Cutoff*1.5),'scale':1,'value':self.Cutoff})
 
-        self.parameters.append({'free':int(index2_free),'name':'Index2','min':0,'max':max(5,self.index2*1.5),
-                     'value':self.index2})
+        self.parameters.append({'free':int(Index2_free),'name':'Index2','min':0,'max':max(5,self.Index2*1.5),
+                     'value':self.Index2})
 
         self.build(self.model_name,self.parameters)
 
 #PLSuperExpCutoff2 class
 class PLSuperExpCutoff2(Spectrum):
-    def __init__(self,prefactor=1e-12,index1=2,scale_energy=1000,expfactor=1,index2=1):
+    def __init__(self,Prefactor=1e-12,Index1=2,Scale=1000,Expfactor=1,Index2=1):
         Spectrum.__init__()
 
         #some checks on the inputs
-        if prefactor<0 or scale_energy<=0 or index2<0:
-            raise ValueError("Input parameters invalid, at least one of prefactor, scale_energy, or index2 is negative or zero.")
+        if Prefactor<0 or Scale<=0 or Index2<0:
+            raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
         
-        self.prefactor_scale=10**np.floor(np.log10(prefactor))
-        self.prefactor=prefactor/self.prefactor_scale
-        self.index1=abs(index1)
-        self.scale_energy=scale_energy
-        self.expfactor=expfactor/1e-3
-        self.index2=index2
+        self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
+        self.Prefactor=Prefactor/self.Prefactor_scale
+        self.Index1=abs(Index1)
+        self.Scale=Scale
+        self.Expfactor=Expfactor/1e-3
+        self.Index2=Index2
 
         self.model_name='PLSuperExpCutoff2'
         self.norm_par='Prefactor'
 
-    def build_spectrum(self,prefactor_free=True,index1_free=True,expfactor_free=True,index2_free=False):
-        self.parameters=[{'free':int(prefactor_free),'name':'Prefactor','min':0,
-                     'max':1e6,'scale':self.prefactor_scale,'value':self.prefactor_value}]
+    def build_spectrum(self,Prefactor_free=True,Index1_free=True,Expfactor_free=True,Index2_free=False):
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
+                     'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
-        self.parameters.append({'free':int(index1_free),'name':'Index1','min':0,
-                     'max':10,'scale':-1,'value':self.index1})
+        self.parameters.append({'free':int(Index1_free),'name':'Index1','min':0,
+                     'max':10,'scale':-1,'value':self.Index1})
 
-        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.scale_energy*0.9),
-                     'max':max(500000,self.scale_energy*1.5),'scale':1,'value':self.scale_energy})
+        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.Scale*0.9),
+                     'max':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
-        self.parameters.append({'free':int(expfactor_free),'name':'Expfactor','min':-1,
-                     'max':max(100,self.expfactor*1.5),'scale':1e-3,'value':self.expfactor})
+        self.parameters.append({'free':int(Expfactor_free),'name':'Expfactor','min':-1,
+                     'max':max(100,self.Expfactor*1.5),'scale':1e-3,'value':self.Expfactor})
 
-        self.parameters.append({'free':int(index2_free),'name':'Index2','min':0,'max':max(5,self.index2*1.5),
-                     'value':self.index2})
+        self.parameters.append({'free':int(Index2_free),'name':'Index2','min':0,'max':max(5,self.Index2*1.5),
+                     'value':self.Index2})
 
         self.build(self.model_name,self.parameters)
 
 #PLSuperExpCutoff4 class
 class PLSuperExpCutoff4(Spectrum):
-    def __init__(self,prefactor=1e-12,indexs=2,scale_energy=1000,expfactors=1,index2=1):
+    def __init__(self,Prefactor=1e-12,IndexS=2,Scale=1000,ExpfactorS=1,Index2=1):
         Spectrum.__init__()
 
         #some checks on the inputs
-        if prefactor<0 or scale_energy<=0 or index2<0:
-            raise ValueError("Input parameters invalid, at least one of prefactor, scale_energy, or index2 is negative or zero.")
+        if Prefactor<0 or Scale<=0 or Index2<0:
+            raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
         
-        self.prefactor_scale=10**np.floor(np.log10(prefactor))
-        self.prefactor=prefactor/self.prefactor_scale
-        self.indexs=abs(indexs)
-        self.scale_energy=scale_energy
-        self.expfactors=expfactors/1e-1
-        self.index2=index2
+        self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
+        self.Prefactor=Prefactor/self.Prefactor_scale
+        self.IndexS=abs(IndexS)
+        self.Scale=Scale
+        self.ExpfactorS=ExpfactorS/1e-1
+        self.Index2=Index2
 
         self.model_name='PLSuperExpCutoff4'
         self.norm_par='Prefactor'
 
-    def build_spectrum(self,prefactor_free=True,indexs_free=True,expfactors_free=True,index2_free=False):
-        self.parameters=[{'free':int(prefactor_free),'name':'Prefactor','min':0,
-                     'max':1e6,'scale':self.prefactor_scale,'value':self.prefactor_value}]
+    def build_spectrum(self,Prefactor_free=True,IndexS_free=True,ExpfactorS_free=True,Index2_free=False):
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
+                     'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
-        self.parameters.append({'free':int(indexs_free),'name':'IndexS','min':0,
-                     'max':10,'scale':-1,'value':self.indexs})
+        self.parameters.append({'free':int(IndexS_free),'name':'IndexS','min':0,
+                     'max':10,'scale':-1,'value':self.IndexS})
 
-        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.scale_energy*0.9),
-                     'max':max(500000,self.scale_energy*1.5),'scale':1,'value':self.scale_energy})
+        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.Scale*0.9),
+                     'max':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
-        self.parameters.append({'free':int(expfactors_free),'name':'ExpfactorS','min':-10,
-                     'max':max(100,self.expfactors*1.5),'scale':1e-1,'value':self.expfactors})
+        self.parameters.append({'free':int(ExpfactorS_free),'name':'ExpfactorS','min':-10,
+                     'max':max(100,self.ExpfactorS*1.5),'scale':1e-1,'value':self.ExpfactorS})
 
-        self.parameters.append({'free':int(index2_free),'name':'Index2','min':0,'max':max(5,self.index2*1.5),
-                     'value':self.index2})
+        self.parameters.append({'free':int(Index2_free),'name':'Index2','min':0,'max':max(5,self.Index2*1.5),
+                     'value':self.Index2})
 
         self.build(self.model_name,self.parameters)
 
 #LogParabola class
 class LogParabola(Spectrum):
-    def __init__(self,norm=1e-9,alpha=1,beta=2,eb=300):
+    def __init__(self,norm=1e-9,alpha=1,beta=2,Eb=300):
         Spectrum.__init__()
 
         #some checks on the inputs
-        if norm<0 or alpha<0 or eb<=0:
-            raise ValueError("Input parameters invalid, at least one of norm, alpha, or eb is negative or zero.")
+        if norm<0 or alpha<0 or Eb<=0:
+            raise ValueError("Input parameters invalid, at least one of norm, alpha, or Eb is negative or zero.")
         
         self.norm_scale=10**np.floor(np.log10(norm))
         self.norm=norm/self.norm_scale
         self.alpha=alpha
         self.beta=beta
-        self.eb=eb
+        self.Eb=Eb
 
         self.model_name='LogParabola'
         self.norm_par='norm'
 
-    def build_spectrum(self,norm_free=True,alpha_free=True,beta_free=True,eb_free=False):
+    def build_spectrum(self,norm_free=True,alpha_free=True,beta_free=True,Eb_free=False):
         self.parameters=[{'free':int(norm_free),'name':'norm','min':0,
                      'max':1e6,'scale':self.norm_scale,'value':self.norm}]
 
@@ -246,8 +246,8 @@ class LogParabola(Spectrum):
         self.parameters.append({'free':int(beta_free),'name':'beata','min':min(-5,self.beta*1.5),
                      'max':max(10,self.beta*1.5),'scale':1,'value':self.beta})
 
-        self.parameters.append({'free':int(eb_free),'name':'Eb','min':min(10,self.eb*0.9),
-                           'max':max(500000,self.eb*1.5),'scale':1,'value':self.eb})
+        self.parameters.append({'free':int(Eb_free),'name':'Eb','min':min(10,self.Eb*0.9),
+                           'max':max(500000,self.Eb*1.5),'scale':1,'value':self.Eb})
 
         self.build(self.model_name,self.parameters)
 

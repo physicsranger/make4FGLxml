@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-from build_model.utilities import angular_separation,get_ROI_from_event_file,build_region
+from build_model.utilities import (
+        angular_separation,
+        get_ROI_from_event_file,
+        build_region)
+
 from build_model.model_components import(
         PowerLaw,
         PLSuperExpCutoff2,
@@ -172,6 +176,26 @@ class SourceList:
                         #now get the spectrum information
                         spectrum=source.getElementsByTagName('spectrum')
                         
+                        self.sources[name].update([('spectrum',
+                             {'model':specrum[0].getAttribute('type')})])
+                        
+                        for parameter in spectrum[0].getElementsByTagName('parameter'):
+                        	self.sources[name]['spectrum'].update([(parameter.getAttribute('name'),
+                        	parameter.getAttribute('value')*parameter.getAttribute('scale'))])
+                        
+                        #now for the spatial information
+                        spatial=source.getElementsByTagName('spatialModel')
+                        
+                        if self.sources[name]['Extended']:
+                        	#do extended stuff
+                        
+                        else:
+                        	self.sources[name].update([('spatial',
+                        	    {'type':'SkyDir'})])
+                        	
+                        	for parameter in spatial[0].getElementsByTagName('parameter'):
+                        		self.source[name]['spatial'].update([(parameter.getAttribute('name'),
+                        		parameter.getAttribute('value'))])
                                                 
                         
 
@@ -283,9 +307,9 @@ class SourceList:
                         if spectral_types[idx]=='PowerLaw':
                                 self.sources[name].update([('spectrum',
                                         {'model':'PowerLaw',
-                                         'prefactor':power_law_fluxes[idx],
-                                         'index':power_law_indices[idx],
-                                         'scale_energy':pivot_energies[idx],
+                                         'Prefactor':power_law_fluxes[idx],
+                                         'Index':power_law_indices[idx],
+                                         'Scale':pivot_energies[idx],
                                          'variable':variability_indices[idx]>=self.variability_threshold,
                                          'significant':average_significances[idx]>=self.sigma_to_free})])
 
@@ -295,7 +319,7 @@ class SourceList:
                                          'norm':log_parabola_fluxes[idx],
                                          'alpha':log_prabola_indices[idx],
                                          'beta':log_parabola_betas[idx],
-                                         'eb':pivot_energies[idx],
+                                         'Eb':pivot_energies[idx],
                                          'variable':variability_indices[idx]>=self.variability_threshold,
                                          'significant':average_significances[idx]>=self.sigma_to_free})])
 
@@ -303,11 +327,11 @@ class SourceList:
                                 if self.DR==3:
                                         self.sources[name].update([('spectrum',
                                                 {'model':'PLSuperExpCutoff4',
-                                                 'prefactor':cutoff_fluxes[idx],
-                                                 'indexs':cutoff_indices[idx],
-                                                 'scale_energy':pivot_energies[idx],
-                                                 'expfactors':cutoff_expfactors[idx],
-                                                 'index2':cutoff_expindices[idx],
+                                                 'Prefactor':cutoff_fluxes[idx],
+                                                 'IndexS':cutoff_indices[idx],
+                                                 'Scale':pivot_energies[idx],
+                                                 'ExpfactorS':cutoff_expfactors[idx],
+                                                 'Index2':cutoff_expindices[idx],
                                                  'variable':variability_indices[idx]>=self.variability_threshold,
                                                  'significant':average_significances[idx]>=self.sigma_to_free})])
 
