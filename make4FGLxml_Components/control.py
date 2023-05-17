@@ -15,6 +15,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt,QTimer
 from PyQt6.QtGui import QDoubleValidator
 
+from build_model.utilities import get_ROI_from_event_file
+
 class ControlWidget(QWidget):
     def __init__(self,main_window):
         super().__init__(main_window)
@@ -531,9 +533,6 @@ class ControlWidget(QWidget):
     def create_model(self):
         #do stuff to make the XML file (and possible .reg file)
         print('this is only a test')
-        print(f'The RA value is {self.ROI_center_RA_entry.text()}')
-        print(f'The RA value has type {type(self.ROI_center_RA_entry.text())}')
-        print(f'Is this input acceptable? {self.ROI_center_RA_entry.hasAcceptableInput()}')
         return
 
     def quit_application(self):
