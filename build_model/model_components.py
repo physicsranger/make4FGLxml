@@ -23,10 +23,11 @@ def parameter_element(free,name,maximum,minimum,scale,value):
     parameter.setAttribute('value',str(value))
     return parameter
 
-#create separate classes for the different spatial and spectral model
-#try to define a base class that does stuff, and then base the other models on that
-#to prevent too much duplication of functions/code
-#just pass the spectrum attribute to the appendChild method of a source XML element
+###########################################################################################
+#create separate classes for the different spectral models
+#all built on a base class to avoid too much duplication of functions/code
+#only need to pass the spectrum attribute to the appendChild method of a source XML element
+###########################################################################################
 class Spectrum:
     def __init__(self):
         self.document=minidom.getDOMImplementation().createDocument(None,None,None)
@@ -48,7 +49,7 @@ class PowerLaw(Spectrum):
         if prefactor<0 or scale_energy<=0:
             raise ValueError("Input parameters invalid, at least one of prefactor or scale_energy is negative or zero.")
         
-        self.prefactor_scale=np.floor(np.log10(prefactor))
+        self.prefactor_scale=10**np.floor(np.log10(prefactor))
         self.prefactor=prefactor/self.prefactor_scale
         self.index=abs(index)
         self.scale_energy=scale_energy
@@ -80,7 +81,7 @@ class PowerLaw2(Spectrum):
         if lower_limit>=upper_limit:
             raise ValueError(f"Requested LowerLimit of {lower_limit:,} is >= UpperLimit of {upper_limit:,}.")
         
-        self.integral_scale=np.floor(np.log10(integral))
+        self.integral_scale=10**np.floor(np.log10(integral))
         self.integral=prefactor/self.integral_scale
         self.index=abs(index)
         self.lower_limit=lower_limit
@@ -115,7 +116,7 @@ class PLSuperExpCutoff(Spectrum):
         if prefactor<0 or scale_energy<=0 or cutoff<=0 or index2<0:
             raise ValueError("Input parameters invalid, at least one of prefactor, scale_energy, cutoff, or index2 is negative or zero.")
         
-        self.prefactor_scale=np.floor(np.log10(prefactor))
+        self.prefactor_scale=10**np.floor(np.log10(prefactor))
         self.prefactor=prefactor/self.prefactor_scale
         self.index1=abs(index1)
         self.scale_energy=scale_energy
@@ -152,7 +153,7 @@ class PLSuperExpCutoff2(Spectrum):
         if prefactor<0 or scale_energy<=0 or index2<0:
             raise ValueError("Input parameters invalid, at least one of prefactor, scale_energy, or index2 is negative or zero.")
         
-        self.prefactor_scale=np.floor(np.log10(prefactor))
+        self.prefactor_scale=10**np.floor(np.log10(prefactor))
         self.prefactor=prefactor/self.prefactor_scale
         self.index1=abs(index1)
         self.scale_energy=scale_energy
@@ -189,7 +190,7 @@ class PLSuperExpCutoff4(Spectrum):
         if prefactor<0 or scale_energy<=0 or index2<0:
             raise ValueError("Input parameters invalid, at least one of prefactor, scale_energy, or index2 is negative or zero.")
         
-        self.prefactor_scale=np.floor(np.log10(prefactor))
+        self.prefactor_scale=10**np.floor(np.log10(prefactor))
         self.prefactor=prefactor/self.prefactor_scale
         self.indexs=abs(indexs)
         self.scale_energy=scale_energy
@@ -226,7 +227,7 @@ class LogParabola(Spectrum):
         if norm<0 or alpha<0 or eb<=0:
             raise ValueError("Input parameters invalid, at least one of norm, alpha, or eb is negative or zero.")
         
-        self.norm_scale=np.floor(np.log10(norm))
+        self.norm_scale=10**np.floor(np.log10(norm))
         self.norm=norm/self.norm_scale
         self.alpha=alpha
         self.beta=beta
@@ -276,9 +277,10 @@ class FileFunction(Spectrum):
         self.spectrum.setAttribute('apply_edisp',self.apply_edisp)
         self.spectrum.setAttribute('file',self.spectrum_file)
 
-######################################################
+###########################################################################################
 #now we'll deal with the spatial models
 #not sure how to make a base class for these
+###########################################################################################
 
 #class for point sources
 class SkyDir:

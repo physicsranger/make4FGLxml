@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt,QTimer
 from PyQt6.QtGui import QDoubleValidator
 
-from build_model.utilities import get_ROI_from_event_file
+from build_model.utilities import get_ROI_from_event_file,build_region
 
 class ControlWidget(QWidget):
     def __init__(self,main_window):
