@@ -15,7 +15,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt,QTimer
 from PyQt6.QtGui import QDoubleValidator
 
-from build_model.utilities import get_ROI_from_event_file,build_region
+from build_model.utilities import get_ROI_from_event_file
+
+from make4FGLxml import SourceList
 
 class ControlWidget(QWidget):
     def __init__(self,main_window):
@@ -165,7 +167,7 @@ class ControlWidget(QWidget):
     def create_eighth_row(self):
         self.eighth_row=QWidget(parent=self)
         
-        self.use_extended_catalog_names=QCheckBox("Use Catalog Names For Extended Sources?",parent=self.eighth_row)
+        self.use_extended_catalog_names_check=QCheckBox("Use Catalog Names For Extended Sources?",parent=self.eighth_row)
         self.free_galactic_index_check=QCheckBox("Modify Galactic Spectrum By Power Law?",parent=self.eighth_row)
         self.use_old_name_convention_check=QCheckBox("Use '_4FGLJXXXX.X+XXXX' Naming Convention?",parent=self.eighth_row)
 
@@ -188,6 +190,9 @@ class ControlWidget(QWidget):
         self.galactic_model_file_button.clicked.connect(self.choose_galactic_model_file)
         self.galactic_model_file_button.setFixedWidth(100)
 
+        self.galactic_name_label=QLabel('Galactic Diffuse Name:',parent=self.ninth_row)
+        self.galactic_name_entry=QLineEdit('gll_iem_v07',parent=self.ninth_row)
+
     def create_tenth_row(self):
         self.tenth_row=QWidget(parent=self)
 
@@ -206,6 +211,9 @@ class ControlWidget(QWidget):
         self.isotropic_template_file_button=QPushButton("Change File",parent=self.tenth_row)
         self.isotropic_template_file_button.clicked.connect(self.choose_isotropic_template_file)
         self.isotropic_template_file_button.setFixedWidth(100)
+
+        self.isotropic_name_label=QLabel('Isotropic Component Name:',parent=self.tenth_row)
+        self.isotropic_name_entry=QLineEdit('iso_P8R3_SOURCE_V3_v1',parent=self.tenth_row)
 
     def create_eleventh_row(self):
         self.eleventh_row=QWidget(parent=self)
@@ -387,7 +395,7 @@ class ControlWidget(QWidget):
         self.eighth_row_layout.setContentsMargins(0,0,0,0)
 
         #grid the eighth row, extended source related checkboxes
-        self.eighth_row_layout.addWidget(self.use_extended_catalog_names)
+        self.eighth_row_layout.addWidget(self.use_extended_catalog_names_check)
         self.eighth_row_layout.addWidget(self.free_galactic_index_check)
         self.eighth_row_layout.addWidget(self.use_old_name_convention_check)
 
@@ -402,6 +410,8 @@ class ControlWidget(QWidget):
         self.ninth_row_layout.addWidget(self.galactic_model_file_entry)
         self.ninth_row_layout.addWidget(self.galactic_model_file_button)
         self.ninth_row_layout.addStretch(1)
+        self.ninth_row_layout.addWidget(self.galactic_name_label)
+        self.ninth_row_layout.addWidget(self.galactic_name_entry)
 
         self.ninth_row.setLayout(self.ninth_row_layout)
 
@@ -414,6 +424,8 @@ class ControlWidget(QWidget):
         self.tenth_row_layout.addWidget(self.isotropic_template_file_entry)
         self.tenth_row_layout.addWidget(self.isotropic_template_file_button)
         self.tenth_row_layout.addStretch(1)
+        self.tenth_row_layout.addWidget(self.isotropic_name_label)
+        self.tenth_row_layout.addWidget(self.isotropic_name_entry)
 
         self.tenth_row.setLayout(self.tenth_row_layout)
 
@@ -452,6 +464,10 @@ class ControlWidget(QWidget):
 
         #set the returned value to the corresponding entry
         self.catalog_entry.setText(catalog_file_name)
+        return
+
+    #function to tweak the significance label based on if a FITS or XML catalog is selected
+    def set_significance_type(self):
         return
 
     #function to open a file dialog window to select the save location
@@ -530,10 +546,41 @@ class ControlWidget(QWidget):
         self.ROI_center_radius_entry.setText(f'{radius:f}')
         return
 
+    #need to set conditions for the create_model button to be active or not
+    #so that I don't have to do the argument checks here, use the isValid method
+    #for the QLineEdit objects and check that files/directories exist
     def create_model(self):
         #do stuff to make the XML file (and possible .reg file)
-        print('this is only a test')
-        return
+        source_list=SourceList(self.catalog_entry.text(),
+                               [float(self.ROI_center_RA_entry.text()),
+                                  float(self.ROI_center_DEC_entry.text),
+                                  float(self.ROI_center_radius_entry.text)],
+                               self.output_file_entry.text(),
+                               self.DR_spinbox.value(),
+                               self.save_directory_entry.text())
+
+        #print to verify
+        source_list.Print()
+
+        #now make the model an we're done
+        source_list.make_model(self.galactic_model_file_entry.text(),
+                               self.galactic_name_entry.text(),
+                               self.isotropic_template_file_entry.text(),
+                               self.isotropic_name_entry.text(),
+                               self.normalizations_only.isChecked(),
+                               self.extended_template_directory_entry.text(),
+                               float(self.free_radius_entry.text()),
+                               float(self.max_free_radius_entry.text()),
+                               float(self.extra_radius_entry.text()),
+                               float(self.significance_entry.text()),
+                               self.variable_sources_free_check.isChecked(),
+                               self.force_point_source_check.isChecked(),
+                               self.use_extended_catalog_names_check.isChecked(),
+                               self.region_check.isChecked(),
+                               self.region_entry.text(),
+                               self.free_galactic_index_check.isChecked(),
+                               self.use_old_name_convention_check.isChecked())
+
 
     def quit_application(self):
         self.main_window.terminal_widget.write('Goodbye!')
