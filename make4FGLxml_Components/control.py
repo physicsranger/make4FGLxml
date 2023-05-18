@@ -53,6 +53,11 @@ class ControlWidget(QWidget):
         self.catalog_entry=QLineEdit(parent=self.first_row)
         self.catalog_entry.setFixedWidth(400)
 
+        #set a trace on the catalog_entry to detect
+        #the file type and change the significance label
+        #between average sigma and test statistic
+        self.catalog_entry.textEdited.connect(self.set_significance_type)
+
         #create widgets for the DR version
         self.DR_label=QLabel('DR:',parent=self.first_row)
         self.DR_spinbox=QSpinBox(parent=self.first_row)
@@ -112,7 +117,17 @@ class ControlWidget(QWidget):
         self.ROI_radius_entry=QLineEdit(parent=self.fourth_row)
         self.ROI_radius_entry.setValidator(self.radius_validator)
         self.ROI_radius_entry.setFixedWidth(25)
-        #now need self.RA and self.DEC tied to the QLineEdit widgets above
+        
+        #now need to monitor for when those values are changed
+        #either by the user or programmatically
+        self.ROI_RA_entry.textEdited.connect(self.set_make_model_state)
+        self.ROI_RA_entry.textChanged.connect(self.set_make_model_state)
+
+        self.ROI_DEC_entry.textEdited.connect(self.set_make_model_state)
+        self.ROI_DEC_entry.textChanged.connect(self.set_make_model_state)
+
+        self.ROI_radius_entry.textEdited.connect(self.set_make_model_state)
+        self.ROI_radius_entry.textChanged.connect(self.set_make_model_state)
 
         #allow user to instead choose an event file to get the ROI center information
         self.or_label=QLabel(' or ',parent=self.fourth_row)
@@ -145,6 +160,12 @@ class ControlWidget(QWidget):
         self.extra_radius_entry.setValidator(self.extra_radius_validator)
         self.extra_radius_entry.setFixedWidth(25)
 
+        #put checks on these values being edited to see if the
+        #make model button can be active
+        self.free_radius_entry.textEdited.connect(self.set_make_model_state)
+        self.max_free_radius_entry.textEdited.connect(self.set_make_model_state)
+        self.extra_radius_entry.textEdited.connect(self.set_make_model_state)
+
     def create_sixth_row(self):
         self.sixth_row=QWidget(parent=self)
         
@@ -155,6 +176,9 @@ class ControlWidget(QWidget):
         self.significance_entry=QLineEdit(parent=self.sixth_row)
         self.significance_entry.setValidator(self.significance_validator)
         self.significance_entry.setFixedWidth(25)
+
+        #check if the make_model_button can be active based on this value
+        self.significance_entry.textEdited.connect(self.set_make_model_state)
 
     def create_seventh_row(self):
         self.seventh_row=QWidget(parent=self)
@@ -193,6 +217,13 @@ class ControlWidget(QWidget):
         self.galactic_name_label=QLabel('Galactic Diffuse Name:',parent=self.ninth_row)
         self.galactic_name_entry=QLineEdit('gll_iem_v07',parent=self.ninth_row)
 
+        #link these entries to make_model_button state as well
+        #essentially just making sure they're not empty
+        self.galactic_model_file_entry.textEdited.connect(self.set_make_model_state)
+        self.galactic_model_file_entry.textChanged.connect(self.set_make_model_state)
+        
+        self.galactic_name_entry.textEdited.connect(self.set_make_model_state)
+
     def create_tenth_row(self):
         self.tenth_row=QWidget(parent=self)
 
@@ -214,6 +245,12 @@ class ControlWidget(QWidget):
 
         self.isotropic_name_label=QLabel('Isotropic Component Name:',parent=self.tenth_row)
         self.isotropic_name_entry=QLineEdit('iso_P8R3_SOURCE_V3_v1',parent=self.tenth_row)
+
+        #use edits here to check state of make_model_button
+        self.isotropic_template_file_entry.textEdited.connect(self.set_make_model_state)
+        self.isotropic_template_file_entry.textChanged.connect(self.set_make_model_state)
+
+        self.isotropic_name_entry.textEdited.connect(self.set_make_model_state)
 
     def create_eleventh_row(self):
         self.eleventh_row=QWidget(parent=self)
@@ -244,6 +281,10 @@ class ControlWidget(QWidget):
         #now we need a button to actually make the files
         self.make_model_button=QPushButton('Make Model',parent=self.twelvth_row)
         self.make_model_button.clicked.connect(self.create_model)
+
+        #we will start off with the button disabled
+        #need to have valid inputs before we can push the button
+        self.make_model_button.setEnabled(False)
         
         #and finish it off with a 'Quit' button
         self.quit_button=QPushButton("Quit",parent=self.twelvth_row)
@@ -453,6 +494,26 @@ class ControlWidget(QWidget):
 
         self.twelvth_row.setLayout(self.twelvth_row_layout)
 
+    #function to decide if the make_model_button should be active or not
+    def set_make_model_state(self):
+        #lots of things to check so that the make_model_button can be enabled
+        if os.path.exists(self.catalog_entry.text()) and\
+           self.ROI_RA_entry.isValid() and\
+           self.ROI_DEC_entry.isValid() and\
+           self.ROI_radius_entry.isValid() and\
+           self.free_radius_entry.isValid() and\
+           self.max_free_radius_entry.isValid() and\
+           self.extra_radius_entry.isValid() and\
+           self.significance_entry.isValid() and\
+           self.galactic_model_file_entry.text()!='' and\
+           self.galactic_name_entry.text()!='' and\
+           self.isotropic_template_file_entry.text()!='' and\
+           self.isotropic_name_entry.text()!='':
+            self.make_model_button.setEnabled(True)
+
+        else:
+            self.make_model_button.setEnabled(False)
+
     #function to open a file dialog window and select the catalog file
     def choose_catalog(self):
         #first, determine the starting directory
@@ -468,7 +529,13 @@ class ControlWidget(QWidget):
 
     #function to tweak the significance label based on if a FITS or XML catalog is selected
     def set_significance_type(self):
-        return
+        if os.path.dirname(self.catalog_entry.text()).split('.')[-1].lower()=='xml':
+            self.significance_label.setText("Minimum Test Statistic Value In Catalog For Free Sources:")
+        else:
+            self.significance_label.setText("Minimum Average Significance In Catalog For Free Sources:"
+
+        #also check the make_model_button
+        self.set_make_model_state()
 
     #function to open a file dialog window to select the save location
     def choose_save_directory(self):
