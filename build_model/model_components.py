@@ -42,9 +42,7 @@ class Spectrum:
     def build(self):
         self.spectrum.setAttribute('type',self.model_name)
         for parameter in self.parameters:
-            self.spectrum.appendChild(parameter_element(parameter.get('free'),
-                parameter.get('name'),parameter.get('max'),parameter.get('min'),
-                parameter.get('scale'),parameter.get('value')))
+            self.spectrum.appendChild(parameter_element(**parameter))
 
     def get_function_dictionary(self):
         self.functions={'PowerLaw':self.PowerLaw,
@@ -56,7 +54,7 @@ class Spectrum:
                    'FileFunction':self.FileFunction}
                    
 
-    def PowerLaw(self,Prefactor=1e-12,Scale=1000,Index2,Prefactor_free=True,Index_free=True,model=None):
+    def PowerLaw(self,Prefactor=1e-12,Scale=1000,Index=2,Prefactor_free=True,Index_free=True,model=None):
         if Prefactor<0 or Scale<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor or Scale is negative or zero.")
         
@@ -67,17 +65,17 @@ class Spectrum:
 
         self.model_name='PowerLaw'
         self.norm_par='Prefactor'
+        
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
+                     'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
-        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
-                     'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
+        self.parameters.append({'free':int(Index_free),'name':'Index','minimum':0,
+                     'maximum':10,'scale':-1,'value':self.Index})
 
-        self.parameters.append({'free':int(Index_free),'name':'Index','min':0,
-                     'max':10,'scale':-1,'value':self.Index})
+        self.parameters.append({'free':0,'name':'Scale','minimum':min(100,self.Scale*0.9),
+                           'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
-        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.Scale*0.9),
-                           'max':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
-
-        self.build(self.model_name,self.parameters)
+        self.build()
 
     def PowerLaw2(self,Integral=1e-8,Index=2,LowerLimit=100,UpperLimit=300,
                   Integral_free=True,Index_free=True,model=None):
@@ -97,21 +95,21 @@ class Spectrum:
         self.model_name='PowerLaw2'
         self.norm_par='Integral'
 
-        self.parameters=[{'free':int(Integral_free),'name':'Integral','min':0,
-                     'max':1e6,'scale':self.Integral_scale,'value':self.Integral}]
+        self.parameters=[{'free':int(Integral_free),'name':'Integral','minimum':0,
+                     'maximum':1e6,'scale':self.Integral_scale,'value':self.Integral}]
 
-        self.parameters.append({'free':int(Index_free),'name':'Index','min':0,
-                     'max':10,'scale':-1,'value':self.Index})
+        self.parameters.append({'free':int(Index_free),'name':'Index','minimum':0,
+                     'maximum':10,'scale':-1,'value':self.Index})
 
-        self.parameters.append({'free':0,'name':'LowerLimit','min':10,
-                           'max':max(500000,self.LowerLimit*1.5),
+        self.parameters.append({'free':0,'name':'LowerLimit','minimum':10,
+                           'maximum':max(500000,self.LowerLimit*1.5),
                            'scale':1,'value':self.LowerLimit})
 
-        self.parameters.append({'free':0,'name':'UpperLimit','min':10,
-                           'max':max(500000,self.UpperLimit*1.5),
+        self.parameters.append({'free':0,'name':'UpperLimit','minimum':10,
+                           'maximum':max(500000,self.UpperLimit*1.5),
                            'scale':1,'value':self.UpperLimit})
 
-        self.build(self.model_name,self.parameters)
+        self.build()
 
     def PLSuperExpCutoff(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,Index2=1,
                          Prefactor_free=True,Index1_free=True,Cutoff_free=True,Index2_free=False,model=None):
@@ -129,22 +127,22 @@ class Spectrum:
         self.model_name='PLSuperExpCutoff'
         self.norm_par='Prefactor'
 
-        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
-                     'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
+                     'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
-        self.parameters.append({'free':int(index1_free),'name':'Index1','min':0,
-                     'max':10,'scale':-1,'value':self.Index1})
+        self.parameters.append({'free':int(index1_free),'name':'Index1','minimum':0,
+                     'maximum':10,'scale':-1,'value':self.Index1})
 
-        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.Scale*0.9),
-                     'max':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
+        self.parameters.append({'free':0,'name':'Scale','minimum':min(100,self.Scale*0.9),
+                     'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
-        self.parameters.append({'free':int(Cutoff_free),'name':'Cutoff','min':min(100,self.Cutoff*0.9),
-                     'max':max(500000,self.Cutoff*1.5),'scale':1,'value':self.Cutoff})
+        self.parameters.append({'free':int(Cutoff_free),'name':'Cutoff','minimum':min(100,self.Cutoff*0.9),
+                     'maximum':max(500000,self.Cutoff*1.5),'scale':1,'value':self.Cutoff})
 
-        self.parameters.append({'free':int(Index2_free),'name':'Index2','min':0,'max':max(5,self.Index2*1.5),
+        self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
                      'value':self.Index2})
 
-        self.build(self.model_name,self.parameters)
+        self.build()
 
     def PLSuperExpCutoff2(self,Prefactor=1e-12,Index1=2,Scale=1000,Expfactor=1,Index2=1,
                           Prefactor_free=True,Index1_free=True,Expfactor_free=True,Index2_free=False,model=None):
@@ -162,22 +160,22 @@ class Spectrum:
         self.model_name='PLSuperExpCutoff2'
         self.norm_par='Prefactor'
 
-        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
-                     'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
+                     'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
-        self.parameters.append({'free':int(Index1_free),'name':'Index1','min':0,
-                     'max':10,'scale':-1,'value':self.Index1})
+        self.parameters.append({'free':int(Index1_free),'name':'Index1','minimum':0,
+                     'maximum':10,'scale':-1,'value':self.Index1})
 
-        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.Scale*0.9),
-                     'max':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
+        self.parameters.append({'free':0,'name':'Scale','minimum':min(100,self.Scale*0.9),
+                     'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
-        self.parameters.append({'free':int(Expfactor_free),'name':'Expfactor','min':-1,
-                     'max':max(100,self.Expfactor*1.5),'scale':1e-3,'value':self.Expfactor})
+        self.parameters.append({'free':int(Expfactor_free),'name':'Expfactor','minimum':-1,
+                     'maximum':max(100,self.Expfactor*1.5),'scale':1e-3,'value':self.Expfactor})
 
-        self.parameters.append({'free':int(Index2_free),'name':'Index2','min':0,'max':max(5,self.Index2*1.5),
+        self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
                      'value':self.Index2})
 
-        self.build(self.model_name,self.parameters)
+        self.build()
 
     def PLSuperExpCutoff4(self,refactor=1e-12,IndexS=2,Scale=1000,ExpfactorS=1,Index2=1,
                           Prefactor_free=True,IndexS_free=True,ExpfactorS_free=True,Index2_free=False,model=None):
@@ -195,22 +193,22 @@ class Spectrum:
         self.model_name='PLSuperExpCutoff4'
         self.norm_par='Prefactor'
 
-        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
-                     'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
+                     'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
-        self.parameters.append({'free':int(IndexS_free),'name':'IndexS','min':0,
-                     'max':10,'scale':-1,'value':self.IndexS})
+        self.parameters.append({'free':int(IndexS_free),'name':'IndexS','minimum':0,
+                     'maximum':10,'scale':-1,'value':self.IndexS})
 
-        self.parameters.append({'free':0,'name':'Scale','min':min(100,self.Scale*0.9),
-                     'max':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
+        self.parameters.append({'free':0,'name':'Scale','minimum':min(100,self.Scale*0.9),
+                     'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
-        self.parameters.append({'free':int(ExpfactorS_free),'name':'ExpfactorS','min':-10,
-                     'max':max(100,self.ExpfactorS*1.5),'scale':1e-1,'value':self.ExpfactorS})
+        self.parameters.append({'free':int(ExpfactorS_free),'name':'ExpfactorS','minimum':-10,
+                     'maximum':max(100,self.ExpfactorS*1.5),'scale':1e-1,'value':self.ExpfactorS})
 
-        self.parameters.append({'free':int(Index2_free),'name':'Index2','min':0,'max':max(5,self.Index2*1.5),
+        self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
                      'value':self.Index2})
 
-        self.build(self.model_name,self.parameters)
+        self.build()
 
     def LogParabola(self,norm=1e-9,alpha=1,beta=2,Eb=300,
                     norm_free=True,alpha_free=True,beta_free=True,Eb_free=False,model=None):
@@ -227,38 +225,38 @@ class Spectrum:
         self.model_name='LogParabola'
         self.norm_par='norm'
 
-        self.parameters=[{'free':int(norm_free),'name':'norm','min':0,
-                     'max':1e6,'scale':self.norm_scale,'value':self.norm}]
+        self.parameters=[{'free':int(norm_free),'name':'norm','minimum':0,
+                     'maximum':1e6,'scale':self.norm_scale,'value':self.norm}]
 
-        self.parameters.append({'free':int(alpha_free),'name':'alpha','min':0,
-                     'max':max(5,self.alpha*1.5),'scale':1,'value':self.alpha})
+        self.parameters.append({'free':int(alpha_free),'name':'alpha','minimum':0,
+                     'maximum':max(5,self.alpha*1.5),'scale':1,'value':self.alpha})
 
-        self.parameters.append({'free':int(beta_free),'name':'beata','min':min(-5,self.beta*1.5),
-                     'max':max(10,self.beta*1.5),'scale':1,'value':self.beta})
+        self.parameters.append({'free':int(beta_free),'name':'beata','minimum':min(-5,self.beta*1.5),
+                     'maximum':max(10,self.beta*1.5),'scale':1,'value':self.beta})
 
-        self.parameters.append({'free':int(Eb_free),'name':'Eb','min':min(10,self.Eb*0.9),
-                           'max':max(500000,self.Eb*1.5),'scale':1,'value':self.Eb})
+        self.parameters.append({'free':int(Eb_free),'name':'Eb','minimum':min(10,self.Eb*0.9),
+                           'maximum':max(500000,self.Eb*1.5),'scale':1,'value':self.Eb})
 
-        self.build(self.model_name,self.parameters)
+        self.build()
 
-    def FileFunction(self,spectrum_file,normalization=1,apply_edisp='false',
-                     normalization_free=True,model=None):
+    def FileFunction(self,spectrum_file,Normalization=1,apply_edisp='false',
+                     Normalization_free=True,model=None):
         #come checks on the inputs
-        if normalization<0:
-            raise ValueError(f"Input value of normalization = {normalization} is invalid, must be >0.")
+        if Normalization<0:
+            raise ValueError(f"Input value of Normalization = {Normalization} is invalid, must be >0.")
 
-        self.normalization=normalization
+        self.Normalization=Normalization
         self.spectrum_file=spectrum_file
         self.apply_edisp=apply_edisp
 
         self.model_name='FileFunction'
         self.norm_par='Normalization'
 
-        self.parameters=[{'free':int(normalization_free),'name':'Normalization',
-                    'min':min(0.01,self.nomralization*0.9),'max':max(10,self.normalization*1.5),
-                    'scale':1,'value':self.normalization}]
+        self.parameters=[{'free':int(Normalization_free),'name':'Normalization',
+                    'minimum':min(0.01,self.Normalization*0.9),'maximum':max(10,self.Normalization*1.5),
+                    'scale':1,'value':self.Normalization}]
 
-        self.build(self.model_name,self.parameters)
+        self.build()
 
         self.spectrum.setAttribute('apply_edisp',self.apply_edisp)
         self.spectrum.setAttribute('file',self.spectrum_file)
@@ -304,7 +302,8 @@ class Spatial:
 
     
     def RadialDisk(self,RA,DEC,Radius,spatial_model=None):
-        #do some sanity checks
+        #do some sanity checks, including converting Radius to float
+        Radius=float(Radius)
         if abs(RA)>360:
             raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
         if abs(DEC)>90:
@@ -326,7 +325,8 @@ class Spatial:
                 minimum='-90.0',scale='1.0',value=f'{self.DEC:.4f}'))
 
     def RadialGaussian(self,RA,DEC,Sigma,spatial_model=None):
-        #do some sanity checks
+        #do some sanity checks, including converting Sigma to a float
+        Sigma=float(Sigma)
         if abs(RA)>360:
             raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
         if abs(DEC)>90:
@@ -357,32 +357,34 @@ class Spatial:
         self.spatial.appendChild(parameter_element(free="0",name="Prefactor",maximum="1000",
                 minimum="0.001",scale="1",value="1"))
 
-    def ConstantValue(self,value=1,spatial_model=None):
-        #check on inputs
-        if value<0:
-            raise ValueError(f'Input value of {value} is invalid, must be >=0.')
+    def ConstantValue(self,Value=1,spatial_model=None):
+        #check on inputs, including making sure value is a float
+        Value=float(Value)
+        if Value<0:
+            raise ValueError(f'Input Value of {Value} is invalid, must be >=0.')
 
-        self.value=value
+        self.Value=Value
 
         self.spatial.setAttribute('type','ConstantValue')
 
-        self.spatial.appendChild(parameter_element(free="0",name="Value",maximum=max(10,self.value*1.5),
-                    minimum='0',scale='1',value=self.value))
+        self.spatial.appendChild(parameter_element(free="0",name="Value",maximum=max(10,self.Value*1.5),
+                    minimum='0',scale='1',value=self.Value))
 
-    def MapCubeFunction(self,spatial_file,normalization=1,spatial_model=None):
+    def MapCubeFunction(self,spatial_file,Normalization=1,spatial_model=None):
         #check on input value
-        if normalization<=0:
-            raise ValueError(f'Input value for normalizaton of {normalization} is invalid, must be >0.')
+        Normalization=float(Normalization)
+        if Normalization<=0:
+            raise ValueError(f'Input value for Normalizaton of {Normalization} is invalid, must be >0.')
         
         self.spatial_file=spatial_file
-        self.normalization=normalization
+        self.Normalization=Normalization
 
         self.spatial.setAttribute('type','MapCubeFunction')
         self.spatial.setAttribute('file',self.spatial_file)
 
         self.spatial.appendChild(parameter_element(free="0",name="Normalization",
-                maximum=max(1000,self.normalization*1.5),
-                minimum=min(0.001,self.normalization*0.9),scale=1,value=self.normalization))
+                maximum=max(1000,self.Normalization*1.5),
+                minimum=min(0.001,self.Normalization*0.9),scale=1,value=self.Normalization))
 
 
 
