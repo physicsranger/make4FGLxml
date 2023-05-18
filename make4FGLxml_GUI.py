@@ -1,3 +1,5 @@
+#!/user/bin/env python
+
 import os,sys
 from PyQt6.QtWidgets import (
     QApplication,
