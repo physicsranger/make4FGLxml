@@ -69,12 +69,17 @@ class SourceList:
 	#make_region (bool) -- optional, flag to also generate ds9 region file
 	#galactic_index_free (bool) -- optional, the Galactic diffuse is given a power-law spectral shape but the by default the index is frozen, setting this flag to True allows that to be free for additional freedom in diffuse fit
 	#use_old_names (bool) -- optional, flag to use the naming convention from make1FGLxml.py and make2FGLxml.py with a leading underscore and no spaces
-	def make_model(self,galactic_file="$(FERMI_DIR)/refdata/fermi/galdiffuse/gll_iem_v07.fits",galactic_name='gll_iem_v07',
-                      isotropic_file="$(FERMI_DIR)/refdata/fermi/galdiffuse/iso_P8R3_SOURCE_V3_v1.txt",isotropic_name='iso_P8R3_SOURCE_V3_v1',
-                      norms_free_only=False,extended_directory=None,free_radius=-1,max_free_radius=None,extra_radius=10,sigma_to_free=5,
-                      variable_free=True,force_point_sources=False,extended_catalog_names=False,make_region=True,region_file=None,
-                      galactic_index_free=False,use_old_names=False):
+	def make_model(self,galactic_file="gll_iem_v07.fits",galactic_name='gll_iem_v07',
+                       isotropic_file="iso_P8R3_SOURCE_V3_v1.txt",isotropic_name='iso_P8R3_SOURCE_V3_v1',
+                       norms_free_only=False,extended_directory=None,free_radius=-1,max_free_radius=None,extra_radius=10,sigma_to_free=5,
+                       variable_free=True,force_point_sources=False,extended_catalog_names=False,make_region=True,region_file=None,
+                       galactic_index_free=False,use_old_names=False):
 
+                if os.path.dirname(galactic_file)=='':
+                        galactic_file=os.path.join('$(FERMI_DIR)','refdata','fermi','galdiffuse',galactic_file)
+                if os.path.dirname(isotropic_file)=='':
+                        isotropic_file=os.path.join('$(FERMI_DIR)','refdata','fermi','galdiffuse',isotropic_file)
+                
                 self.galactic_file=galactic_file
                 self.galactic_name=galactic_name
 
@@ -490,351 +495,7 @@ class SourceList:
                                          'RA':right_ascensions[idx],
                                          'DEC':declinations[idx]})])
 
-                #done with the loop, object will use the sources dictionary to build the model
 
-
-
-                        
-
-def addSrcsXML(sL,GD,GDn,ISO,ISOn,use_old_names=False):
-	varValue=sL.variability_threshold
-	inputXml=minidom.parse(sL.srcs)
-	outputXml=minidom.getDOMImplementation().createDocument(None,'source_library',None)
-	outputXml.documentElement.setAttribute('title','source library')
-	catalog=inputXml.getElementsByTagName('source')
-	Sources={}
-	ptSrcNum=0
-	extSrcNum=0
-	for src in catalog:
-		if src.getAttribute('type')=='PointSource':
-			for p in src.getElementsByTagName('spatialModel')[0].getElementsByTagName('parameter'):
-				if p.getAttribute('name')=='RA':
-					srcRA=float(p.getAttribute('value'))
-				if p.getAttribute('name')=='DEC':
-					srcDEC=float(p.getAttribute('value'))
-		else:
-			try:
-			  srcDEC=float(src.getAttribute('DEC'))
-			  srcRA=float(src.getAttribute('RA'))
-			except:
-			  for p in src.getElementsByTagName('spatialModel')[0].getElementsByTagName('parameter'):
-			    if p.getAttribute('name')=='RA':
-			      srcRA=float(p.getAttribute('value'))
-			    if p.getAttribute('name')=='DEC':
-			      srcDEC=float(p.getAttribute('value'))
-		dist=angsep(sL.roi[0],sL.roi[1],srcRA,srcDEC) #check that source is within ROI radius + 10 degress of ROI center
-		if srcRA==sL.roi[0] and srcDEC==sL.roi[1]:
-			dist=0.0
-		if dist<=sL.roi[2]+sL.ER:
-			spec=src.getElementsByTagName('spectrum')
-			specType=spec[0].getAttribute('type')
-			specPars=spec[0].getElementsByTagName('parameter')
-			Ext=(True if (src.getAttribute('type')=='DiffuseSource' and not sL.psF) else False)
-			sname=src.getAttribute('name')
-			
-			if use_old_names:#if you want the same naming convention as in make1FGLxml.py and make2FGLxml.py, e.g., preceeded by an underscore and no spaces
-				sn='_'
-				for N in str(sname).split(' '):
-					sn+=N
-			varIdx=float(src.getAttribute('Variability_Index'))
-			#varidx=-1#hold over from old XMLs having and then not having and then now having Variability Index
-			Sources[sname]={'ra':srcRA,'dec':srcDEC,'E':Ext,'stype':str(specType)}
-			specOut=outputXml.createElement('spectrum')
-			if str(specType)=='PLSuperExpCutoff2':
-			  specOut.setAttribute('type','PLSuperExpCutoff')
-			else:
-			  specOut.setAttribute('type',specType)
-			spatialOut=outputXml.createElement('spatialModel')
-			srcOut=outputXml.createElement('source')
-			srcOut.setAttribute('name',sname)
-			srcOut.setAttribute('ROI_Center_Distance',"%.2f"%dist)
-			if dist>=sL.roi[2] or dist>=sL.max_free_radius:
-				Sources[sname]['free']=False
-				for p in specPars:
-				  specOut.appendChild(parameter_element("0","%s"%str(p.getAttribute('name')),"%s"%str(p.getAttribute('max')),"%s"%str(p.getAttribute('min')),"%s"%str(p.getAttribute('scale')),"%s"%str(p.getAttribute('value'))))
-			elif dist>sL.free_radius:
-				if sL.var and varIdx>=varValue:
-					Sources[sname]['free']=True
-					for p in specPars:
-					  freeFlag=("1" if p.getAttribute('name')==spec[0].getAttribute('normPar') else "0")
-					  specOut.appendChild(parameter_element("%s"%freeFlag,"%s"%str(p.getAttribute('name')),"%s"%str(p.getAttribute('max')),"%s"%str(p.getAttribute('min')),"%s"%str(p.getAttribute('scale')),"%s"%str(p.getAttribute('value'))))
-				else:
-					Sources[sname]['free']=False
-					for p in specPars:
-					  specOut.appendChild(parameter_element("0","%s"%str(p.getAttribute('name')),"%s"%str(p.getAttribute('max')),"%s"%str(p.getAttribute('min')),"%s"%str(p.getAttribute('scale')),"%s"%str(p.getAttribute('value'))))
-			elif float(src.getAttribute('TS_value'))>=sL.sig:
-				Sources[sname]['free']=True
-				#specOut.setAttribute('apply_edisp',ed)
-				for p in specPars:
-				  freeFlag=("1" if p.getAttribute('name')==spec[0].getAttribute('normPar') or (not sL.nO and p.getAttribute('free')=="1") else "0")
-				  specOut.appendChild(parameter_element("%s"%freeFlag,"%s"%str(p.getAttribute('name')),"%s"%str(p.getAttribute('max')),"%s"%str(p.getAttribute('min')),"%s"%str(p.getAttribute('scale')),"%s"%str(p.getAttribute('value'))))
-			else:
-				if sL.var and varIdx>=varValue:
-					Sources[sname]['free']=True
-					#specOut.setAttribute('apply_edisp',ed)
-					for p in specPars:
-					  freeFlag=("1" if p.getAttribute('name')==spec[0].getAttribute('normPar') else "0")
-					  specOut.appendChild(parameter_element("%s"%freeFlag,"%s"%str(p.getAttribute('name')),"%s"%str(p.getAttribute('max')),"%s"%str(p.getAttribute('min')),"%s"%str(p.getAttribute('scale')),"%s"%str(p.getAttribute('value'))))
-				else:
-					Sources[sname]['free']=False
-					#specOut.setAttribute('apply_edisp','false')
-					for p in specPars:
-					  specOut.appendChild(parameter_element("0","%s"%str(p.getAttribute('name')),"%s"%str(p.getAttribute('max')),"%s"%str(p.getAttribute('min')),"%s"%str(p.getAttribute('scale')),"%s"%str(p.getAttribute('value'))))
-			if Ext:
-				spatial=src.getElementsByTagName('spatialModel')
-				spatType=spatial[0].getAttribute('type')
-				spatPars=spatial[0].getElementsByTagName('parameter')
-				if str(spatType)=='SpatialMap':
-				  spatialOut.setAttribute('type','SpatialMap')
-				  spatialOut.setAttribute('map_based_integral','true')
-				  efile=sL.extD+spatial[0].getAttribute('file').split('/')[-1]
-				  spatialOut.setAttribute('file',efile)
-				  print('Extended source %s in ROI, make sure %s is the correct path to the extended template.'%(sname,efile))
-				else:#have to do above to get correct extended source template file localtion
-				  spatialOut.setAttribute('type',str(spatType))
-				  for p in spatPars:#for radial disks and gaussians, can just do the following
-				    spatialOut.appendChild(parameter_element("0","%s"%str(p.getAttribute('name')),"%s"%str(p.getAttribute('max')),"%s"%str(p.getAttribute('min')),"%s"%str(p.getAttribute('scale')),"%s"%str(p.getAttribute('value'))))
-				    print('Extended source %s in ROI, with %s spatial model.'%(sname,str(spatType)))
-				srcOut.setAttribute('type','DiffuseSource')
-				extSrcNum+=1
-				#print('Extended source %s in ROI, make sure %s is the correct path to the extended template.'%(sname,efile))
-			else:
-				spatialOut.setAttribute('type','SkyDirFunction')
-				spatialOut.appendChild(parameter_element("0","RA","360.0","-360.0","1.0","%.4f"%srcRA))
-				spatialOut.appendChild(parameter_element("0","DEC","360.0","-360.0","1.0","%.4f"%srcDEC))
-				srcOut.setAttribute('type','PointSource')
-				ptSrcNum+=1
-			srcOut.appendChild(specOut)
-			srcOut.appendChild(spatialOut)
-			outputXml.documentElement.appendChild(srcOut)
-	gal=outputXml.createElement('source')
-	gal.setAttribute('name',GDn)
-	gal.setAttribute('type','DiffuseSource')
-	galspec=outputXml.createElement('spectrum')
-	galspec.setAttribute('type','PowerLaw')
-	#galspec.setAttribute('apply_edisp','false')
-	galspec.appendChild(parameter_element("1","Prefactor","10","0","1","1"))
-	if sL.GIF:
-		galspec.appendChild(parameter_element("1","Index","1","-1","1","0"))
-	else:
-		galspec.appendChild(parameter_element("0","Index","1","-1","1","0"))
-	galspec.appendChild(parameter_element("0","Scale","1e6","2e1","1","100"))
-	galspatial=outputXml.createElement('spatialModel')
-	galspatial.setAttribute('type','MapCubeFunction')
-	galspatial.setAttribute('file',GD)
-	galspatial.appendChild(parameter_element("0","Normalization","1e3","1e-3","1","1"))
-	gal.appendChild(galspec)
-	gal.appendChild(galspatial)
-	outputXml.documentElement.appendChild(gal)
-	iso=outputXml.createElement('source')
-	iso.setAttribute('name',ISOn)
-	iso.setAttribute('type','DiffuseSource')
-	isospec=outputXml.createElement('spectrum')
-	isospec.setAttribute('type','FileFunction')
-	isospec.setAttribute('file',ISO)
-	isospec.setAttribute('apply_edisp','false')
-	isospec.appendChild(parameter_element("1","Normalization","10","0.01","1","1"))
-	isospatial=outputXml.createElement('spatialModel')
-	isospatial.setAttribute('type','ConstantValue')
-	isospatial.appendChild(parameter_element("0","Value","10","0","1","1"))
-	iso.appendChild(isospec)
-	iso.appendChild(isospatial)
-	outputXml.documentElement.appendChild(iso)
-	xmlStr=outputXml.toprettyxml(' ').splitlines(True)
-	outStr=filter(lambda xmlStr: len(xmlStr) and not xmlStr.isspace(),xmlStr)
-	outfile=open(sL.out,'w')
-	outfile.write(''.join(outStr))
-	outfile.close()
-	if not sL.psF:
-		print('Added %i point sources and %i extended sources'%(ptSrcNum,extSrcNum))
-		if extSrcNum>0:
-			print('If using unbinned likelihood you will need to rerun gtdiffrsp for the extended sources or rerun the makeModel function with optional argument force_point_sources=True')
-	else:
-		print('Added %i point sources, note that any extended sources in ROI were modeled as point sources becaue force_point_sources option was set to True'%ptSrcNum)
-	if sL.reg:
-		BuildRegion(sL,Sources)
-	return
-
-#function to cycle through the source list and add point source entries
-def addSrcsFITS(sL,GD,GDn,ISO,ISOn,use_old_names):
-	model=open(sL.out,'w') #open file in write mode, overwrites other files of same name
-	catfile=pyfits.open(sL.srcs) #open source list file and access necessary fields, requires LAT source catalog definitions and names
-	data=catfile['LAT_Point_Source_Catalog'].data
-	extendedinfo=catfile['ExtendedSources'].data
-	extName=extendedinfo.field('Source_Name')	
-	extFile=extendedinfo.field('Spatial_Filename')
-	extFunc=extendedinfo.field('Spatial_Function')
-	extSize=extendedinfo.field('Model_SemiMajor')
-	extRa=extendedinfo.field('RAJ2000')
-	extDec=extendedinfo.field('DEJ2000')
-	name=data.field('Source_Name')
-	Sigvals=data.field('Signif_Avg')
-	VarIdx=data.field('Variability_Index')
-	EName=data.field('Extended_Source_Name')
-	ra=data.field('RAJ2000')
-	dec=data.field('DEJ2000')
-	plflux=data.field('PL_Flux_Density')
-	lpflux=data.field('LP_Flux_Density')
-	coflux=data.field('PLEC_Flux_Density')
-	pivot=data.field('Pivot_Energy')
-	plIndex=data.field('PL_Index')
-	lpIndex=data.field('LP_Index')
-	lpbeta=data.field('LP_beta')
-	if sL.DR==3:
-		plecIndex=data.field('PLEC_IndexS')
-		plecexpFact=data.field('PLEC_ExpfactorS')
-		plecexpIndex=data.field('PLEC_Exp_Index')
-	else:
-		plecIndex=data.field('PLEC_Index')
-		plecexpFact=data.field('PLEC_Expfactor')
-		plecexpIndex=data.field('PLEC_Exp_Index')
-	spectype=data.field('SpectrumType')
-	model.write('<?xml version="1.0" ?>\n')
-	model.write('<source_library title="source library">\n')
-	model.write('\n<!-- Point Sources -->\n')
-	step=(sL.roi[2]+sL.ER)/5. #divide ROI radius plus extra_radiusius degrees into 5 steps for ordering of sources
-	i=1
-	radii=[]
-	ptSrcNum=0
-	extSrcNum=0
-	Sources={}#dictionary for sources, useful for creating region file later.
-	while i<6:
-		if i*step<=sL.roi[2]+sL.ER:
-			radii+=[step*i]
-		else:
-			radii+=[sL.roi[2]+sL.ER] #just in case of rounding errors
-		i+=1
-	for x in radii:
-		if x==sL.roi[2]+sL.ER:
-			model.write('\n<!-- Sources between [%s,%s] degrees of ROI center -->\n' %(x-step,x))
-		else:
-			model.write('\n<!-- Sources between [%s,%s) degrees of ROI center -->\n' %(x-step,x))
-		for n,plf,lpf,cof,r,d,p,pli,lpi,lpb,pleci,plecef,plecei,t,TS,En,vi in zip(name,plflux,lpflux,coflux,ra,dec,pivot,plIndex,lpIndex,lpbeta,plecIndex,plecexpFact,plecexpIndex,spectype,Sigvals,EName,VarIdx):
-			E=(True if n[-1]=='e' else False)
-			dist=angsep(sL.roi[0],sL.roi[1],r,d) #check that source is within ROI radius + 10 degress of ROI center
-			if r==sL.roi[0] and d==sL.roi[1]:
-				dist=0.0
-			if (dist<x and dist>=x-step) or (x==sL.roi[2]+10. and dist==x):
-				if E and not sL.psF:
-					Sources[En]={'ra':r,'dec':d,'stype':t,'E':E}
-					extSrcNum+=1
-					Name='<source ROI_Center_Distance="%.3f" name="%s" type="DiffuseSource">\n' %(dist,En)
-				else:
-					if E and not sL.E2C:#even if forcing all to point sources, use extended name except if extended_catalog_names flag is set
-						Sources[En]={'ra':r,'dec':d,'stype':t,'E':E}
-						Name='<source ROI_Center_Distance="%.3f" name="%s" type="PointSource">\n' %(dist,En)
-					else:
-						Sources[n]={'ra':r,'dec':d,'stype':t,'E':E}
-						if use_old_names:
-							srcname='_'
-							for N in n.split(' '):
-								srcname+=N
-							Name='<source ROI_Center_Distance="%.3f" name="%s" type="PointSource">\n' %(dist,srcname)
-						else:
-							Name='<source ROI_Center_Distance="%.3f" name="%s" type="PointSource">\n' %(dist,n)
-					ptSrcNum+=1
-				if t=='PowerLaw':
-					#uncomment out the two lines immediately following later
-					spec,free=PLspec(sL,plf,pli,p,dist,TS,vi)
-				elif t=='LogParabola':
-					fixAll=(True if n=='4FGL J0534.5+2201i' else False)
-					spec,free=LPspec(sL,lpf,lpi,p,lpb,dist,TS,vi,fixAll)
-				else:
-					if sL.DR==3:
-						spec,free=CO4spec(sL,cof,pleci,p,plecef,plecei,dist,TS,vi)
-					else:
-						spec,free=CO2spec(sL,cof,pleci,p,plecef,plecei,dist,TS,vi)
-				if E and not sL.E2C:
-					Sources[En]['free']=free
-				else:
-					Sources[n]['free']=free
-				if E and not sL.psF:
-					efile=None
-					efunc=None
-					eSize=None
-					eR=None
-					eD=None
-					for EXTNAME,EXTFILE,EXTFUNC,EXTSIZE,EXTRA,EXTDEC in zip(extName,extFile,extFunc,extSize,extRa,extDec):
-						if En==EXTNAME:
-							efunc=EXTFUNC
-							efunc=('RadialGaussian' if efunc=='RadialGauss' else efunc)
-							if efunc=='SpatialMap':
-							  efile=sL.extD+EXTFILE
-							else:
-							  eSize=(EXTSIZE/(-2*log(0.32))**0.5 if efunc=='RadialGaussian' else EXTSIZE)
-							  eR=EXTRA
-							  eD=EXTDEC
-					if efunc=='SpatialMap':
-					  if efile==None:
-					    print('could not find a match for',En,'in the list:')
-					    print(extName)
-					    efile=''
-					  skydir='\t<spatialModel file="%s" map_based_integral="true" type="SpatialMap">\n'%(efile)
-					  print('Extended source %s in ROI, make sure %s is the correct path to the extended template.'%(En,efile))
-					  skydir+='\t\t<parameter free="0" max="1000" min="0.001" name="Prefactor" scale="1" value="1"/>\n'
-					  skydir+='\t</spatialModel>\n'
-					else:
-					  skydir='\t<spatialModel type="%s">\n'%efunc
-					  skydir+='\t<parameter free="0" max="360" min="-360" name="RA" scale="1" value="%s"/>\n'%eR
-					  skydir+='\t<parameter free="0" max="90" min="-90" name="DEC" scale="1" value="%s"/>\n'%eD
-					  if efunc=='RadialDisk':
-					    skydir+='\t<parameter free="0" max="10" min="0" name="Radius" scale="1" value="%s"/>\n'%eSize
-					  else:
-					    skydir+='\t<parameter free="0" max="10" min="0" name="Sigma" scale="1" value="%s"/>\n'%eSize
-					  skydir+='\t</spatialModel>\n'
-					  print('Extended source %s in ROI with %s spatial model.'%(En,efunc))
-				else:
-					skydir='\t<spatialModel type="SkyDirFunction">\n'
-					skydir+='\t\t<parameter free="0" max="360.0" min="-360.0" name="RA" scale="1.0" value="%s"/>\n' %r
-					skydir+='\t\t<parameter free="0" max="90" min="-90" name="DEC" scale="1.0" value="%s"/>\n' %d
-					skydir+='\t</spatialModel>\n'
-				skydir+='</source>'
-				(src,)=(Name+spec+skydir,)
-				ptsrc=pS(src).getElementsByTagName('source')[0]
-				ptsrc.writexml(model)
-				model.write('\n')
-	catfile.close() #close file
-	if not sL.psF:
-		print('Added %i point sources and %i extended sources'%(ptSrcNum,extSrcNum))
-		if extSrcNum>0:
-			print('If using unbinned likelihood you will need to rerun gtdiffrsp for the extended sources or rerun the makeModel function with optional argument force_point_sources=True')
-	else:
-		print('Added %i point sources, note that any extended sources in ROI were modeled as point sources becaue force_point_sources option was set to True'%ptSrcNum)
-	#add galactic diffuse with PL spectrum, fix index to zero for general use, those who want it to be free can unfreeze parameter manually
-	model.write('\n<!-- Diffuse Sources -->\n')
-	Name='\n<source name="%s" type="DiffuseSource">\n' %GDn
-	spec='\t<spectrum type="PowerLaw">\n'
-	spec+='\t\t<parameter free="1" max="10" min="0" name="Prefactor" scale="1" value="1"/>\n'
-	if sL.GIF:
-		spec+='\t\t<parameter free="1" max="1" min="-1" name="Index" scale="1.0" value="0"/>\n'
-	else:
-		spec+='\t\t<parameter free="0" max="1" min="-1" name="Index" scale="1.0" value="0"/>\n'
-	spec+='\t\t<parameter free="0" max="2e2" min="5e1" name="Scale" scale="1.0" value="1e2"/>\n'
-	spec+='\t</spectrum>\n'
-	skydir='\t<spatialModel file="%s" type="MapCubeFunction">\n' %GD
-	skydir+='\t\t<parameter free="0" max="1e3" min="1e-3" name="Normalization" scale="1.0" value="1.0"/>\n'
-	skydir+='\t</spatialModel>\n'
-	skydir+='</source>'
-	(src,)=(Name+spec+skydir,)
-	galdiff=pS(src).getElementsByTagName('source')[0]
-	galdiff.writexml(model)
-	model.write('\n')
-	Name='<source name="%s" type="DiffuseSource">\n' %ISOn
-	spec='\t<spectrum type="FileFunction" file="%s"  apply_edisp="false">\n' %ISO
-	spec+='\t\t<parameter free="1" max="10" min="1e-2" name="Normalization" scale="1" value="1"/>\n'
-	spec+='\t</spectrum>\n'
-	skydir='\t<spatialModel type="ConstantValue">\n'
-	skydir+='\t\t<parameter free="0" max="10.0" min="0.0" name="Value" scale="1.0" value="1.0"/>\n'
-	skydir+='\t</spatialModel>\n'
-	skydir+='</source>'
-	(src,)=(Name+spec+skydir,)
-	iso=pS(src).getElementsByTagName('source')[0]
-	iso.writexml(model)	
-	model.write('\n</source_library>')
-	model.close()
-	if sL.reg:
-		BuildRegion(sL,Sources)
-	return
 
 def mybool(Input):
 	return {'True':True,'False':False,'T':True,'F':False,'t':True,'f':False,'TRUE':True,'FALSE':False,"true":True,"false":False,"1":True,"0":False}.get(Input)
@@ -842,38 +503,120 @@ def mybool(Input):
 def cli():
 	import argparse
 	
-	helpString="Creates an xml model from the 3FGL catalog (FITS or xml version) for a specific ROI,\
-		    coordinates of the ROI center are taken from an input event file,\
-		    the radius for including sources is 10 degrees beyond the extraction radius used in the event file,\
+	helpString="Creates an XML model from the 4FGL catalog (DR 1, 2, or 3) using FITS or XML catalog version\
+                    for a specific ROI specified through input coordinates or taken from an input event file,\
+		    the default radius for including sources is 10 degrees beyond the ROI radius,\
 		    sources with free parameters within the original extraction radius are chosen based on nearness to center, significance, and variability."
 	parser=argparse.ArgumentParser(description=helpString)
-	parser.add_argument("catalog",type=str,help="Catalog file to use, can be FITS or xml.")
-	parser.add_argument("ev",type=str,help="Event file with ROI information in header.")
-	parser.add_argument("-o","--outputxml",type=str,default='mymodel.xml',help="Name of output xml file, is set to overwrite files of same name.")
-	parser.add_argument("-G","--galfile",type=str,default='$(FERMI_DIR)/refdata/fermi/galdiffuse/gll_iem_v07.fits',help="Name and location of Galactic diffuse model to use, will default to gll_iem_v06.fits.")
-	parser.add_argument("-g","--galname",type=str,default='gll_iem_v07',help="Name of Galactic diffuse component in output model, will default to gll_iem_v06.")
-	parser.add_argument("-I","--isofile",type=str,default='$(FERMI_DIR)/refdata/fermi/galdiffuse/iso_P8R3_SOURCE_V3_v1.txt',help="Name of isotropic diffuse template for output model, will default to P8R3 SOURCE class model.")
-	parser.add_argument("-i","--isoname",type=str,default='iso_P8R3_SOURCE_V3_v1',help="Name of isotropic diffuse component in output model, default is for P8R3 SOURCE class.")
-	parser.add_argument("-N","--normsonly",type=mybool,default=False,help="Flag to only let the normalizations of parameters be free, default is False.",nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
-	parser.add_argument("-e","--extended_directory",type=str,default='',help="Path to directory with LAT extended source templates, will default to STs default.")#need to figure out what that is
-	parser.add_argument("-r","--free_radius",type=float,default=-1.,help="Radius, in degrees, from ROI center beyond which all source parameters should be fixed, will default to selection radius.")
-	parser.add_argument("-R","--max_free_radius",type=float,default=None,help="Absolute maximum radius, in degrees, from ROI center beyond which all source parameters should be fixed, even variable sources will not be freed beyond this radius, defaults to free_radius value.")
-	parser.add_argument("-ER","--extra_radius",type=float,default=10.,help="Radius beyond event file ROI out to which sources will be included in the model with all parameters fixed, default is 10, good for analyses starting around a few hundred MeV, can be decreased for high energy only fits.")
-	parser.add_argument("-s","--sigma_to_free",type=float,default=5.,help="Average significance below which all source parameters are fixed, defaults to 5.  Note, if using the 3FGL catalog xml file as input, this is actually a cut on TS, so adjust accordingly.")
-	parser.add_argument("-v","--variable_free",type=mybool,default=True,help="Flag to set normalization of significantly variable sources, even if source is beyond radius limit or below TS limit, default is True.",choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
-	parser.add_argument("-p","--force_point_sources",type=mybool,default=False,help="Flag to cast extended sources as point sources, default is False.",nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
-	parser.add_argument("-E2C","--extended_catalog_names",type=mybool,default=False,help="Flag to use catalog names for extended sources, default is False.",nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
-	parser.add_argument("-m","--make_region",type=mybool,default=True,help="Flag to create ds9 region file as well as the xml model, default is True.",choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
-	parser.add_argument("-GIF","--galactic_index_free",type=mybool,default=False,help="Flag to use a power-law modification to the Galactic diffuse model spectrum and have the index be free, default is False.",nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
-	parser.add_argument("-wd","--writeDir",type=str,default='',help="Directory to write the output ds9 region file in if not the current working directory or if you are specifying the full path to the newly made XML file.")
-	parser.add_argument("-ON","--use_old_names",type=mybool,default=False,help="Flag to use the make2FLGxml style naming convention, underscore before name and no spaces, default is False.",nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
-	parser.add_argument('-DR','--DataRelease',type=int,default=3,help='Choice of data release, 3 for 4FGL-DR3, 2 for 4FGL-DR2, and 1 for 4FGL.',choices=[1,2,3])
+	parser.add_argument("catalog",type=str,help="Path to catalog file to use, can be FITS or xml.")
+	
+	parser.add_argument("-ev","--event_file",type=str,default=None,help="Event file with ROI information in header.")
+	
+	parser.add_argument("--RA",type=float,default=None,
+                            help="Right Ascension (J2000) in degrees of ROI center, only used if no event file given.")
+	
+	parser.add_argument("--DEC",type=float,default=None,
+                            help="Declination (J2000) in degrees of ROI center, only used if no event file given.")
+	
+	parser.add_argument("--radius",type=float,default=None,
+                            help="Radius, in degrees, of ROI, only used if no event file given.")
+	
+	parser.add_argument("-o","--output_name",type=str,default='my_model.xml',
+                            help="Name of output xml file, is set to overwrite files of same name.")
+	
+	parser.add_argument("-G","--galactic_file",type=str,default='gll_iem_v07.fits',
+                            help="Name and location of Galactic diffuse model to use, will default to gll_iem_v07.fits.")
+	
+	parser.add_argument("-g","--galactic_ame",type=str,default='gll_iem_v07',
+                            help="Name of Galactic diffuse component in output model, will default to gll_iem_v07.")
+	
+	parser.add_argument("-I","--isotropic_file",type=str,default='iso_P8R3_SOURCE_V3_v1.txt',
+                            help="Name of isotropic diffuse template for output model, will default to P8R3 SOURCE class model.")
+	
+	parser.add_argument("-i","--isotropic_name",type=str,default='iso_P8R3_SOURCE_V3_v1'
+                            ,help="Name of isotropic diffuse component in output model, default is for P8R3 SOURCE class.")
+	
+	parser.add_argument("-N","--norms_free_only",type=mybool,default=False
+                            ,help="Flag to only let the normalizations of parameters be free, default is False.",
+                            nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
+	
+	parser.add_argument("-e","--extended_directory",type=str,default='',
+                            help="Path to directory with LAT extended source templates, will default to STs default.")
+	
+	parser.add_argument("-r","--free_radius",type=float,default=-1.,
+                            help="Radius, in degrees, from ROI center beyond which all source parameters should be fixed, will default to selection radius.")
+	
+	parser.add_argument("-R","--max_free_radius",type=float,default=None,
+                            help="Absolute maximum radius, in degrees, from ROI center beyond which all source parameters should be fixed,\
+even variable sources will not be freed beyond this radius, defaults to free_radius value.")
+	
+	parser.add_argument("-ER","--extra_radius",type=float,default=10.,
+                            help="Radius beyond event file ROI out to which sources will be included in the model with all parameters fixed,\
+default is 10, good for analyses starting around a few hundred MeV, can be decreased for high energy only fits.")
+	
+	parser.add_argument("-s","--sigma_to_free",type=float,default=5.,
+                            help="Average significance below which all source parameters are fixed, defaults to 5.\
+Note, if using the 3FGL catalog xml file as input, this is actually a cut on TS, so adjust accordingly.")
+	
+	parser.add_argument("-v","--variable_free",type=mybool,default=True,
+                            help="Flag to set normalization of significantly variable sources,\
+even if source is beyond radius limit or below TS limit, default is True.",
+                            choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
+	
+	parser.add_argument("-p","--force_point_sources",type=mybool,default=False,
+                            help="Flag to cast extended sources as point sources, default is False.",
+                            nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
+	
+	parser.add_argument("-E2C","--extended_catalog_names",type=mybool,default=False,
+                            help="Flag to use catalog names for extended sources, default is False.",
+                            nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
+	
+	parser.add_argument("-m","--make_region",type=mybool,default=True,
+                            help="Flag to create ds9 region file as well as the xml model, default is True.",
+                            choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
+
+	parser.add_argument('-rf','--region_file',type=str,default='',
+                            help='Name of output .reg file, if make_region set to true.  Will default to\
+ROI_"output_name".reg if not specified.')
+	
+	parser.add_argument("-GIF","--galactic_index_free",type=mybool,default=False,
+                            help="Flag to use a power-law modification to the Galactic diffuse model spectrum\
+and have the index be free, default is False.",
+                            nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
+	
+	parser.add_argument("-wd","--write_directory",type=str,default='',
+                            help="Directory to write the output ds9 region file in if not the current working directory\
+or if you are specifying the full path to the newly made XML file.")
+	
+	parser.add_argument("-ON","--use_old_names",type=mybool,default=False,
+                            help="Flag to use the make2FLGxml style naming convention, underscore before name and no spaces,\
+default is False.",nargs="?",const=True,
+                            choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
+	
+	parser.add_argument('-DR',type=int,default=3,help='Choice of data release, 3 for 4FGL-DR3, 2 for 4FGL-DR2, and 1 for 4FGL.',
+                            choices=[1,2,3])
 	
 	args=parser.parse_args()
 
-	sL=srcList(args.catalog,args.ev,args.outputxml,args.DataRelease)
+        #determine how the ROI information will be derived,
+	#event file or location and radius specified
+	if args.event_file is None:
+                if args.RA is None or args.DEC is None or args.radius is None:
+                        raise ValueError('No Fermi LAT event file provided but one of RA, DEC, or radius is None.')
+                ROI=[RA,DEC,radius]
+        else:
+                ROI=[args.event_file]
+
+        #Make a SourceList object and then call the makeModel method
+	source_list=SourceList(args.catalog,ROI,args.output_name,args.DR,args.write_directory)
 	
-	sL.makeModel(args.galfile,args.galname,args.isofile,args.isoname,args.normsonly,args.extended_directory,args.free_radius,args.max_free_radius,args.extra_radius,args.sigma_to_free,args.variable_free,args.force_point_sources,args.extended_catalog_names,args.make_region,args.galactic_index_free,args.writeDir,args.use_old_names)
+	source_list.make_model(args.galactic_file,args.galactic_name,
+                              args.isotropic_file,args.isotropic_name,
+                              args.norms_free_only,args.extended_directory,
+                              args.free_radius,args.max_free_radius,args.extra_radius,
+                              args.sigma_to_free,args.variable_free,args.force_point_sources,
+                              args.extended_catalog_names,args.make_region,args.region_file,
+                              args.galactic_index_free,args.use_old_names)
 	
 	
 if __name__=='__main__': cli()
