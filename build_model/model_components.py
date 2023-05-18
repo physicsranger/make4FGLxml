@@ -24,28 +24,39 @@ def parameter_element(free,name,maximum,minimum,scale,value):
     return parameter
 
 ###########################################################################################
-#create separate classes for the different spectral models
-#all built on a base class to avoid too much duplication of functions/code
+#class for the spectral models, will need a function for each model
+#currently, focus mainly on those models we'll run into in the catalog
 #only need to pass the spectrum attribute to the appendChild method of a source XML element
 ###########################################################################################
 class Spectrum:
-    def __init__(self):
+    def __init__(self,model,**kwargs):
         self.document=minidom.getDOMImplementation().createDocument(None,None,None)
         self.spectrum=self.document.createElement('spectrum')
 
-    def build(self,model_name,parameters):
-        self.spectrum.setAttribute('type',model_name)
-        for parameter in parameters:
+        self.get_function_dictionary()
+
+        self.parameters=self.functions[model]
+
+        self.model_name=model
+
+    def build(self):
+        self.spectrum.setAttribute('type',self.model_name)
+        for parameter in self.parameters:
             self.spectrum.appendChild(parameter_element(parameter.get('free'),
                 parameter.get('name'),parameter.get('max'),parameter.get('min'),
                 parameter.get('scale'),parameter.get('value')))
 
-#PowerLaw class
-class PowerLaw(Spectrum):
-    def __init__(self,Prefactor=1e-12,Index=2,Scale=1000):
-        Spectrum.__init__()
+    def get_function_dictionary(self):
+        self.functions={'PowerLaw':self.PowerLaw,
+                   'PowerLaw2':self.PowerLaw2,
+                   'PLSuperExpCutoff':self.PLSuperExpCutoff,
+                   'PLSuperExpCutoff2':self.PLSuperExpCutoff2,
+                   'PLSuperExpCutoff4':self.PLSuperExpCutoff4,
+                   'LogParabola':self.LogParabola,
+                   'FileFunction':self.FileFunction}
+                   
 
-        #some checks on the inputs
+    def PowerLaw(self,Prefactor=1e-12,Scale=1000,Index2,Prefactor_free=True,Index_free=True,model=None):
         if Prefactor<0 or Scale<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor or Scale is negative or zero.")
         
@@ -57,7 +68,6 @@ class PowerLaw(Spectrum):
         self.model_name='PowerLaw'
         self.norm_par='Prefactor'
 
-    def build_spectrum(self,Prefactor_free=True,Index_free=True):
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
                      'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -69,11 +79,8 @@ class PowerLaw(Spectrum):
 
         self.build(self.model_name,self.parameters)
 
-#PowerLaw2 class
-class PowerLaw2(Spectrum):
-    def __init__(self,Integral=1e-8,Index=2,LowerLimit=100,UpperLimit=300000):
-        Spectrum.__init__()
-
+    def PowerLaw2(self,Integral=1e-8,Index=2,LowerLimit=100,UpperLimit=300,
+                  Integral_free=True,Index_free=True,model=None):
         #some checks on the inputs
         if Integral<0 or LowerLimit<=0 or UpperLimit<=0:
             raise ValueError("Input parameters invalid, at least one of Integral, LowerLimit, or UpperLimit is negative or zero.")
@@ -90,7 +97,6 @@ class PowerLaw2(Spectrum):
         self.model_name='PowerLaw2'
         self.norm_par='Integral'
 
-    def build_spectrum(self,Integral_free=True,Index_free=True):
         self.parameters=[{'free':int(Integral_free),'name':'Integral','min':0,
                      'max':1e6,'scale':self.Integral_scale,'value':self.Integral}]
 
@@ -107,11 +113,8 @@ class PowerLaw2(Spectrum):
 
         self.build(self.model_name,self.parameters)
 
-#PLSuperExpCutoff class
-class PLSuperExpCutoff(Spectrum):
-    def __init__(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,Index2=1):
-        Spectrum.__init__()
-
+    def PLSuperExpCutoff(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,Index2=1,
+                         Prefactor_free=True,Index1_free=True,Cutoff_free=True,Index2_free=False,model=None):
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Cutoff<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, Cutoff, or Index2 is negative or zero.")
@@ -126,7 +129,6 @@ class PLSuperExpCutoff(Spectrum):
         self.model_name='PLSuperExpCutoff'
         self.norm_par='Prefactor'
 
-    def build_spectrum(self,Prefactor_free=True,Index1_free=True,Cutoff_free=True,Index2_free=False):
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
                      'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -144,11 +146,8 @@ class PLSuperExpCutoff(Spectrum):
 
         self.build(self.model_name,self.parameters)
 
-#PLSuperExpCutoff2 class
-class PLSuperExpCutoff2(Spectrum):
-    def __init__(self,Prefactor=1e-12,Index1=2,Scale=1000,Expfactor=1,Index2=1):
-        Spectrum.__init__()
-
+    def PLSuperExpCutoff2(self,Prefactor=1e-12,Index1=2,Scale=1000,Expfactor=1,Index2=1,
+                          Prefactor_free=True,Index1_free=True,Expfactor_free=True,Index2_free=False,model=None):
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
@@ -163,7 +162,6 @@ class PLSuperExpCutoff2(Spectrum):
         self.model_name='PLSuperExpCutoff2'
         self.norm_par='Prefactor'
 
-    def build_spectrum(self,Prefactor_free=True,Index1_free=True,Expfactor_free=True,Index2_free=False):
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
                      'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -181,11 +179,8 @@ class PLSuperExpCutoff2(Spectrum):
 
         self.build(self.model_name,self.parameters)
 
-#PLSuperExpCutoff4 class
-class PLSuperExpCutoff4(Spectrum):
-    def __init__(self,Prefactor=1e-12,IndexS=2,Scale=1000,ExpfactorS=1,Index2=1):
-        Spectrum.__init__()
-
+    def PLSuperExpCutoff4(self,refactor=1e-12,IndexS=2,Scale=1000,ExpfactorS=1,Index2=1,
+                          Prefactor_free=True,IndexS_free=True,ExpfactorS_free=True,Index2_free=False,model=None):
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
@@ -200,7 +195,6 @@ class PLSuperExpCutoff4(Spectrum):
         self.model_name='PLSuperExpCutoff4'
         self.norm_par='Prefactor'
 
-    def build_spectrum(self,Prefactor_free=True,IndexS_free=True,ExpfactorS_free=True,Index2_free=False):
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','min':0,
                      'max':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -218,11 +212,8 @@ class PLSuperExpCutoff4(Spectrum):
 
         self.build(self.model_name,self.parameters)
 
-#LogParabola class
-class LogParabola(Spectrum):
-    def __init__(self,norm=1e-9,alpha=1,beta=2,Eb=300):
-        Spectrum.__init__()
-
+    def LogParabola(self,norm=1e-9,alpha=1,beta=2,Eb=300,
+                    norm_free=True,alpha_free=True,beta_free=True,Eb_free=False,model=None):
         #some checks on the inputs
         if norm<0 or alpha<0 or Eb<=0:
             raise ValueError("Input parameters invalid, at least one of norm, alpha, or Eb is negative or zero.")
@@ -236,7 +227,6 @@ class LogParabola(Spectrum):
         self.model_name='LogParabola'
         self.norm_par='norm'
 
-    def build_spectrum(self,norm_free=True,alpha_free=True,beta_free=True,Eb_free=False):
         self.parameters=[{'free':int(norm_free),'name':'norm','min':0,
                      'max':1e6,'scale':self.norm_scale,'value':self.norm}]
 
@@ -251,11 +241,8 @@ class LogParabola(Spectrum):
 
         self.build(self.model_name,self.parameters)
 
-#class for FileFunction
-class FileFunction(Spectrum):
-    def __init__(self,spectrum_file,normalization=1,apply_edisp='false'):
-        Spectrum.__init__()
-        
+    def FileFunction(self,spectrum_file,normalization=1,apply_edisp='false',
+                     normalization_free=True,model=None):
         #come checks on the inputs
         if normalization<0:
             raise ValueError(f"Input value of normalization = {normalization} is invalid, must be >0.")
@@ -267,7 +254,6 @@ class FileFunction(Spectrum):
         self.model_name='FileFunction'
         self.norm_par='Normalization'
 
-    def build_spectrum(self,normalization_free=True):
         self.parameters=[{'free':int(normalization_free),'name':'Normalization',
                     'min':min(0.01,self.nomralization*0.9),'max':max(10,self.normalization*1.5),
                     'scale':1,'value':self.normalization}]
@@ -278,13 +264,27 @@ class FileFunction(Spectrum):
         self.spectrum.setAttribute('file',self.spectrum_file)
 
 ###########################################################################################
-#now we'll deal with the spatial models
-#not sure how to make a base class for these
+#class for the spatial models
+#will only need to add the spatial class attribute/object to a larger XML document
 ###########################################################################################
+class Spatial:
+    def __init__(self,spatial_model,**kwargs):
+        self.document=minidom.getDOMImplementation().createDocument(None,None,None)
+        self.spatial=self.document.createElement('spatialModel')
 
-#class for point sources
-class SkyDir:
-    def __init__(self,RA,DEC):
+        self.get_function_dictionary()
+
+        self.functions[spatial_model](**kwargs)
+
+    def get_function_dictionary(self):
+        self.functions={'SkyDir':self.SkyDir,
+                   'RadialDisk':self.RadialDisk,
+                   'RadialGaussian':self.RadialGaussian,
+                   'SpatialMap':self.SpatialMap,
+                   'ConstantValue':self.ConstantValue,
+                   'MapCubeFunction':self.MapCubeFunction}
+
+    def SkyDir(self,RA,DEC,spatial_model=None):
         #do some sanity checks
         if abs(RA)>360:
             raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
@@ -295,10 +295,6 @@ class SkyDir:
         self.DEC=DEC
         self.build()
 
-    def build(self):
-        self.document=minidom.getDOMImplementation().createDocument(None,None,None)
-
-        self.spatial=self.document.createElement('spatialModel')
         self.spatial.setAttribute('type','SkyDirFunction')
 
         self.spatial.appendChild(parameter_element(free='0',name='RA',maximum='360.0',
@@ -306,51 +302,54 @@ class SkyDir:
         self.spatial.appendChild(parameter_element(free='0',name='DEC',maximum='90.0',
                 minimum='-90.0',scale='1.0',value=f'{self.DEC:.4f}'))
 
-#class for the RadialDisk and RadialGaussian models
-class Radial:
-    def __init__(self,RA,DEC,extent,extent_name):
+    
+    def RadialDisk(self,RA,DEC,Radius,spatial_model=None):
         #do some sanity checks
         if abs(RA)>360:
             raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
         if abs(DEC)>90:
             raise ValueError(f'Input DEC value of {DEC} is invalid, must be between -90 and 90.')
-        if extent<=0:
-            raise ValueError(f'Input extent value of {extent} is invalid, must be >0.')
-        if extent_name not in ['Radius','Sigma']:
-            raise ValueError(f'Input name for extent parameter is invalid, must be "Radius" or "Sigma".')
+        if Radius<=0:
+            raise ValueError(f'Input Radius value of {Radius} is invalid, must be >0.')
         
         self.RA=RA
         self.DEC=DEC
-        self.extent=extent
-        self.extent_name=extent_name
-        self.model_name='RadialDisk' if extent_name=='Radius' else 'RadialGaussian'
+        self.Radius=Radius
 
-        self.build()
+        self.spatial.setAttribute('type','RadialDisk')
 
-    def build(self):
-        self.document=minidom.getDOMImplementation().createDocument(None,None,None)
-
-        self.spatial=self.document.createElement('spatialModel')
-        self.spatial.setAttribute('type',self.model_name)
-
-        self.spatial.appendChild(parameter_element(free='0',name=self.extent_name,
-                maximum=max(10,self.extent*1.5),minimum='0',scale='1',value=self.extent))
+        self.spatial.appendChild(parameter_element(free='0',name='Radius',
+                maximum=max(10,self.extent*1.5),minimum='0',scale='1',value=self.Radius))
         self.spatial.appendChild(parameter_element(free='0',name='RA',maximum='360.0',
                 minimum='-360.0',scale='1.0',value=f'{self.RA:.4f}'))
         self.spatial.appendChild(parameter_element(free='0',name='DEC',maximum='90.0',
                 minimum='-90.0',scale='1.0',value=f'{self.DEC:.4f}'))
 
-#class for extended sources with spatial template file
-class SpatialMap:
-    def __init__(self,spatial_file):
+    def RadialGaussian(self,RA,DEC,Sigma,spatial_model=None):
+        #do some sanity checks
+        if abs(RA)>360:
+            raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
+        if abs(DEC)>90:
+            raise ValueError(f'Input DEC value of {DEC} is invalid, must be between -90 and 90.')
+        if Radius<=0:
+            raise ValueError(f'Input Sigma value of {Sigma} is invalid, must be >0.')
+        
+        self.RA=RA
+        self.DEC=DEC
+        self.Sigma=Sigma
+
+        self.spatial.setAttribute('type','RadialGaussian')
+
+        self.spatial.appendChild(parameter_element(free='0',name='Sigma',
+                maximum=max(10,self.extent*1.5),minimum='0',scale='1',value=self.Sigma))
+        self.spatial.appendChild(parameter_element(free='0',name='RA',maximum='360.0',
+                minimum='-360.0',scale='1.0',value=f'{self.RA:.4f}'))
+        self.spatial.appendChild(parameter_element(free='0',name='DEC',maximum='90.0',
+                minimum='-90.0',scale='1.0',value=f'{self.DEC:.4f}'))
+
+    def SpatialMap(self,spatial_file,spatial_model=None):
         self.spatial_file=spatial_file
 
-        self.build()
-
-    def build(self):
-        self.document=minidom.getDOMImplementation().createDocument(None,None,None)
-
-        self.spatial=self.document.createElement('spatialModel')
         self.spatial.setAttribute('type','SpatialMap')
         self.spatial.setAttribute('file',self.spatial_file)
         self.spatial.setAttribute('map_based_integral','true')
@@ -358,29 +357,19 @@ class SpatialMap:
         self.spatial.appendChild(parameter_element(free="0",name="Prefactor",maximum="1000",
                 minimum="0.001",scale="1",value="1"))
 
-#class for constant value spatial type
-class ConstantValue:
-    def __init__(self,value=1):
+    def ConstantValue(self,value=1,spatial_model=None):
         #check on inputs
         if value<0:
             raise ValueError(f'Input value of {value} is invalid, must be >=0.')
 
         self.value=value
 
-        self.build()
-
-    def build(self):
-        self.document=minidom.getDOMImplementation().createDocument(None,None,None)
-
-        self.spatial=self.document.createElement('spatialModel')
         self.spatial.setAttribute('type','ConstantValue')
 
         self.spatial.appendChild(parameter_element(free="0",name="Value",maximum=max(10,self.value*1.5),
                     minimum='0',scale='1',value=self.value))
 
-#class for mapcubefunction spatial model
-class MapCubeFunction
-    def __init__(self,spatial_file,normalization=1):
+    def MapCubeFunction(self,spatial_file,normalization=1,spatial_model=None):
         #check on input value
         if normalization<=0:
             raise ValueError(f'Input value for normalizaton of {normalization} is invalid, must be >0.')
@@ -388,12 +377,6 @@ class MapCubeFunction
         self.spatial_file=spatial_file
         self.normalization=normalization
 
-        self.build()
-
-    def build(self):
-        self.document=minidom.getDOMImplementation().createDocument(None,None,None)
-
-        self.spatial=self.document.createElement('spatialModel')
         self.spatial.setAttribute('type','MapCubeFunction')
         self.spatial.setAttribute('file',self.spatial_file)
 

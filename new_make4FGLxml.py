@@ -166,9 +166,9 @@ class SourceList:
 
                 #now traverse the shorter list of sources to create the self.sources nested dictionary
                 self.sources={}
-                for source in self.sources:
+                for source,RA,DEC,distance in zip(self.sources,right_ascensions,declinations,self.source_distances):
                         name=source.getAttribute('name')
-                        self.sources.update([(name,{'roi_distance':self.source_distances[idx]})])
+                        self.sources.update([(name,{'roi_distance':distance})])
 
                         if source.getAttribute('type')=='DiffuseSource':
                                 self.sources[name].update([('Extended',not self.force_point_sources)])
@@ -187,16 +187,18 @@ class SourceList:
                         spatial=source.getElementsByTagName('spatialModel')
                         
                         if self.sources[name]['Extended']:
-                        	#do extended stuff
+                        	self.sources[name].update([('spatial',
+                                        {'spatial_model':spatial[0].getAttribute('type')})])
+                        	for parameter in spatial[0].getElementsByTagName('parameter'):
+                        		self.sources[name]['spatial'].update([(parameter.getAttribute('name'),
+                        		parameter.getAttribute('value'))])
                         
                         else:
                         	self.sources[name].update([('spatial',
-                        	    {'type':'SkyDir'})])
+                        	    {'spatial_model':'SkyDir','RA':RA,'DEC':DEC})])
                         	
-                        	for parameter in spatial[0].getElementsByTagName('parameter'):
-                        		self.source[name]['spatial'].update([(parameter.getAttribute('name'),
-                        		parameter.getAttribute('value'))])
-                                                
+
+                        #now just need to add the TS and variability index stuff (if possible)
                         
 
         def get_sources_fits(self):
@@ -343,11 +345,13 @@ class SourceList:
                                 #if one of the 'Radial' models
                                 if row.function[:6]=='Radial':
                                         self.sources[name].update([('spatial',
-                                                {'type':'RadialGaussian' if row.function=='RadialGauss' else row.function,
+                                                {'spatial_model':'RadialGaussian' if row.function=='RadialGauss' else row.function,
                                                  'RA':row.RA,
-                                                 'DEC':row.DEC,
-                                                 'extent':row.extent if row.function=='RadialDisk' else row.extent/(-2.np.log(0.32))**0.5,
-                                                 'extent_name':'Radius' if row.function=='RadialDisk' else 'Sigma'})])
+                                                 'DEC':row.DEC})])
+                                        if row.function=='RadialDisk':
+                                                self.sources[name]['spatial'].update([('Radius',row.extent)])
+                                        else:
+                                                self.sources[name]['spatial'].update([('Sigma',row.extent/(-2.np.log(0.32))**0.5)])
 
                                 #otherwise it is a spatial map
                                 else:
