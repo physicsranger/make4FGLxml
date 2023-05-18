@@ -51,14 +51,14 @@ def build_region(region_file_name,sources):
 		#cycle through the sources dictionary
 		for source_name in sources.keys():
 			source=sources.get(source_name)
-			entry=f"J2000;point({source['ra']:.3f},{source['dec']:.3f}) # point = "
+			entry=f"J2000;point({source['RA']:.3f},{source['DEC']:.3f}) # point = "
 			
 			#check if source is extended or not
 			if source['E']:
 				entry+=f"box 18 color = {color[source['free']]} "
 			
 			else:
-				entry+=f"{shape[source['stype'].strip('2345')]} 15 "
+				entry+=f"{shape[source['spectrum']['model'].strip('2345')]} 15 "
 				entry+=f"color = {color[source['free']]} "
 			
 			#add the name and write to file
