@@ -1,2 +1,6 @@
 #ignore some basic stuff
 __pycache__/
+
+#ignore .xml and .reg files from testing/working in repo directory
+*.xml
+*.reg
