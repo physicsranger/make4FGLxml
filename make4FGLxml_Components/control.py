@@ -532,7 +532,7 @@ class ControlWidget(QWidget):
         if os.path.dirname(self.catalog_entry.text()).split('.')[-1].lower()=='xml':
             self.significance_label.setText("Minimum Test Statistic Value In Catalog For Free Sources:")
         else:
-            self.significance_label.setText("Minimum Average Significance In Catalog For Free Sources:"
+            self.significance_label.setText("Minimum Average Significance In Catalog For Free Sources:")
 
         #also check the make_model_button
         self.set_make_model_state()

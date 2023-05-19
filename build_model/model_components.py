@@ -1,5 +1,4 @@
 from xml.dom import minidom
-from xml.minidom import parseString
 import numpy as np
 
 #copied from Damien's macro
@@ -35,12 +34,13 @@ class Spectrum:
 
         self.get_function_dictionary()
 
-        self.parameters=self.functions[model]
+        self.parameters=self.functions[model](**kwargs)
 
         self.model_name=model
 
     def build(self):
         self.spectrum.setAttribute('type',self.model_name)
+        self.spectrum.setAttribute('normPar',self.norm_par)
         for parameter in self.parameters:
             self.spectrum.appendChild(parameter_element(**parameter))
 
@@ -54,14 +54,14 @@ class Spectrum:
                    'FileFunction':self.FileFunction}
                    
 
-    def PowerLaw(self,Prefactor=1e-12,Scale=1000,Index=2,Prefactor_free=True,Index_free=True,model=None):
+    def PowerLaw(self,Prefactor=1e-12,Scale=1000,Index=2,Prefactor_free=True,Index_free=True,Scale_free=False,model=None):
         if Prefactor<0 or Scale<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor or Scale is negative or zero.")
         
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
-        self.Prefactor=prefactor/self.Prefactor_scale
+        self.Prefactor=Prefactor/self.Prefactor_scale
         self.Index=abs(Index)
-        self.Scale=scale
+        self.Scale=Scale
 
         self.model_name='PowerLaw'
         self.norm_par='Prefactor'
@@ -72,7 +72,7 @@ class Spectrum:
         self.parameters.append({'free':int(Index_free),'name':'Index','minimum':0,
                      'maximum':10,'scale':-1,'value':self.Index})
 
-        self.parameters.append({'free':0,'name':'Scale','minimum':min(100,self.Scale*0.9),
+        self.parameters.append({'free':int(Scale_free),'name':'Scale','minimum':min(100,self.Scale*0.9),
                            'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
         self.build()
@@ -112,7 +112,8 @@ class Spectrum:
         self.build()
 
     def PLSuperExpCutoff(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,Index2=1,
-                         Prefactor_free=True,Index1_free=True,Cutoff_free=True,Index2_free=False,model=None):
+                         Prefactor_free=True,Index1_free=True,Cutoff_free=True,Index2_free=False,
+                         Scale_free=False,model=None):
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Cutoff<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, Cutoff, or Index2 is negative or zero.")
@@ -133,19 +134,20 @@ class Spectrum:
         self.parameters.append({'free':int(index1_free),'name':'Index1','minimum':0,
                      'maximum':10,'scale':-1,'value':self.Index1})
 
-        self.parameters.append({'free':0,'name':'Scale','minimum':min(100,self.Scale*0.9),
+        self.parameters.append({'free':int(Scale_free),'name':'Scale','minimum':min(100,self.Scale*0.9),
                      'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
         self.parameters.append({'free':int(Cutoff_free),'name':'Cutoff','minimum':min(100,self.Cutoff*0.9),
                      'maximum':max(500000,self.Cutoff*1.5),'scale':1,'value':self.Cutoff})
 
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
-                     'value':self.Index2})
+                     'scale':1,'value':self.Index2})
 
         self.build()
 
     def PLSuperExpCutoff2(self,Prefactor=1e-12,Index1=2,Scale=1000,Expfactor=1,Index2=1,
-                          Prefactor_free=True,Index1_free=True,Expfactor_free=True,Index2_free=False,model=None):
+                          Prefactor_free=True,Index1_free=True,Expfactor_free=True,Index2_free=False,
+                          Scale_free=False,model=None):
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
@@ -166,19 +168,20 @@ class Spectrum:
         self.parameters.append({'free':int(Index1_free),'name':'Index1','minimum':0,
                      'maximum':10,'scale':-1,'value':self.Index1})
 
-        self.parameters.append({'free':0,'name':'Scale','minimum':min(100,self.Scale*0.9),
+        self.parameters.append({'free':int(Scale_free),'name':'Scale','minimum':min(100,self.Scale*0.9),
                      'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
         self.parameters.append({'free':int(Expfactor_free),'name':'Expfactor','minimum':-1,
                      'maximum':max(100,self.Expfactor*1.5),'scale':1e-3,'value':self.Expfactor})
 
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
-                     'value':self.Index2})
+                     'scale':1,'value':self.Index2})
 
         self.build()
 
-    def PLSuperExpCutoff4(self,refactor=1e-12,IndexS=2,Scale=1000,ExpfactorS=1,Index2=1,
-                          Prefactor_free=True,IndexS_free=True,ExpfactorS_free=True,Index2_free=False,model=None):
+    def PLSuperExpCutoff4(self,Prefactor=1e-12,IndexS=2,Scale=1000,ExpfactorS=1,Index2=1,
+                          Prefactor_free=True,IndexS_free=True,ExpfactorS_free=True,Index2_free=False,
+                          Scale_free=False,model=None):
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
@@ -199,14 +202,14 @@ class Spectrum:
         self.parameters.append({'free':int(IndexS_free),'name':'IndexS','minimum':0,
                      'maximum':10,'scale':-1,'value':self.IndexS})
 
-        self.parameters.append({'free':0,'name':'Scale','minimum':min(100,self.Scale*0.9),
+        self.parameters.append({'free':int(Scale_free),'name':'Scale','minimum':min(100,self.Scale*0.9),
                      'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
         self.parameters.append({'free':int(ExpfactorS_free),'name':'ExpfactorS','minimum':-10,
                      'maximum':max(100,self.ExpfactorS*1.5),'scale':1e-1,'value':self.ExpfactorS})
 
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
-                     'value':self.Index2})
+                     'scale':1,'value':self.Index2})
 
         self.build()
 
@@ -291,7 +294,6 @@ class Spatial:
         
         self.RA=RA
         self.DEC=DEC
-        self.build()
 
         self.spatial.setAttribute('type','SkyDirFunction')
 
