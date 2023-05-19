@@ -3,6 +3,8 @@ An updated version of the make4FGLxml script, including a GUI, used to produce s
 
 The main changes are to improve the readability of the code and make it more elegant (though elegence is a matter of opinion).  If you are already familiar with the code, the [previous instructions](https://fermi.gsfc.nasa.gov/ssc/data/analysis/user/readme_make4FGLxml.txt) are still mostly valid, with the major changes being in some argument names and that the custom class is called SourceList instead of srcList.  Additionally, previously the sources were grouped by distance from the ROI center with comments inserted to denote the "distance block", but only when using the FITS catalog.  Currently, the script no longer does this, but it does sort the sources by distance from the ROI center, even if you're using the XML version of the catalog, which it didn't do previously.
 
+The script now requires the ```pandas``` module, which can easily be installed with pip or your preferred package manager.
+
 ---
 
 ## Installation
@@ -67,4 +69,28 @@ source_list.make_model(free_radius=6,max_free_radius=8,sigma_to_free=12)
 
 As noted, the previous example assumes that the ```source_list``` object was created referencing the FITS version of the 4FGL catalog, so the values given mean that sources only have free spectral parameters if they were found in the catalog with $\geq12\sigma$ average significance and are within 6 degrees of the ROI center or if they were found to be significantly variable in the catalog and are within 8 degrees of the ROI center.  If the ```source_list``` object had been created referencing the XML version of the catalog, the _sigma\_to\_free_ parameter applies to the source test statistic, so a value more like 100 or 200 might be more suitable than 12, depending on the use case.
 
+### Using the Command Line Interface
+The script can be called as an executable from the command line.  You'll need to add the repo to your PATH to be able to call it.  You can then invoke the script either on it's own:
 
+```make4FGLxml.py --options```  
+
+or using python:
+
+```python make4FGLxml.py --options```  
+
+If the first option doesn't work, you should try editing the shebang at the top of the file to point to the correct python on your system.
+
+The command line options are almost entirely the same, with the same names, as those described in the section for how to use the script in an interactive session or your own script.  The only difference is in how the ROI information is entered. To get the ROI information from a _Fermi_ LAT event file (in this case we'll assume it is called my\_LAT\_events.fits and is in the current directory), use a command similar to:
+
+```make4FGLxml.py /some/path/to/gll_psc_v28.xml --event_file my_LAT_events.fits --options```
+
+To instead provide the ROI information directly (here we will center at (RA,DEC) = (120.3 deg., 30.5 deg.) with a 15 degree radius), use a command similar to:
+
+```make4FGLxml.py /some/path/to/gll_psc_v31.fits --RA 120.3 --DEC 30.5 --radius 15 --options```
+
+When specifying optional arguments (represented by ```--options``` in the example commands above)  you can use the same names as in the interactive example, preceded by two dashes.  Some options do have shortened identifiers preceded by only one dash.  To see all the options and help text, simply use the command:
+
+```make4FGLxml.py --help```
+
+### Using the GUI
+The GUI is still a work in progress and has not been fully tested...
