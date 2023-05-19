@@ -50,7 +50,7 @@ class SourceList:
     def Print(self):
         print('Catalog file: ',self.catalog_file)
         print('Output file name: ',self.output_name)
-        print(f'Selecting {self.roi[2]:.1f} degrees around (ra,dec)=({self.roi[0]:.3f},{self.roi[1]:.3f})')
+        print(f'Selecting {self.ROI[2]:.1f} degrees around (ra,dec)=({self.ROI[0]:.3f},{self.ROI[1]:.3f})')
     
     #make the xml file
     #arguments are:
@@ -74,7 +74,7 @@ class SourceList:
                isotropic_file="iso_P8R3_SOURCE_V3_v1.txt",isotropic_name='iso_P8R3_SOURCE_V3_v1',
                norms_free_only=False,extended_directory=None,free_radius=-1,max_free_radius=None,extra_radius=10,sigma_to_free=5,
                variable_free=True,force_point_sources=False,extended_catalog_names=False,make_region=True,region_file=None,
-               galactic_index_free=False,use_old_names=False):
+               galactic_index_free=True,use_old_names=False):
 
         if os.path.dirname(galactic_file)=='':
             if self.fermi_dir is None:
@@ -146,7 +146,7 @@ class SourceList:
         output_xml.documentElement.setAttribute('title','source library')
         for source_name in self.sources.keys():
             source_out=output_xml.createElement('source')
-            source_out.setAttribute('name','_'+source_name if self.use_old_names else source_name)
+            source_out.setAttribute('name','_'+reduce(lambda s1,s2:s1+s2,source_name.split(' ')) if self.use_old_names else source_name)
             source_out.setAttribute('ROI_Center_Distance',f"{self.sources[source_name]['roi_distance']:.2f}")
             source_out.setAttribute('type','DiffuseSource' if self.sources[source_name]['Extended'] else 'PointSource')
             if self.sources[source_name]['Extended']:
@@ -365,190 +365,169 @@ class SourceList:
 
     def get_sources_fits(self):
         #first, open the catalog FITS file and extract the information
-        #we care about, cast as numpy arrays for ease later
+        #we care about, putting the info into a couple of pandas dataframes
+        #for ease of dealing with and searching through
         with pyfits.open(self.catalog_file) as catalog:
             source_info=catalog['LAT_Point_Source_Catalog'].data.field
             extended_info=catalog['ExtendedSources'].data.field
-            
-            extended_names=np.array(extended_info('Source_Name'))
-            extended_files=np.array(extended_info('Spatial_Filename'))
-            extended_spatial_functions=np.array(extended_info('Spatial_Function'))
-            extended_extents=np.array(extended_info('Model_SemiMajor'))
-            extended_RA=np.array(extended_info('RAJ2000'))
-            extended_DEC=np.array(extended_info('DEJ2000'))
 
-            #cast these as a data frame with the extended_name as the index
-            #making it much easier to search later using just .loc
-            #instead of a nested for loop
-            extended_sources=pd.DataFrame(np.c_[extended_files,extended_spatial_functions,
-                extended_extents,extended_RA,extended_DEC],
-                columns=['file','function','extent','RA','DEC'],
-                index=extended_names)
+            extended_sources=pd.DataFrame(np.c_[extended_info('Spatial_Filename'),
+                                                extended_info('Spatial_Function'),
+                                                extended_info('Model_SemiMajor'),
+                                                extended_info('RAJ2000'),
+                                                extended_info('DEJ2000')],
+                                          columns=['file','function','extent','RA','DEC'],
+                                          index=extended_info('Source_Name'))
             
-            names=np.array(source_info('Source_Name'))
-            
-            average_significances=np.array(source_info('Signif_Avg'))
-            variability_indices=np.array(source_info('Variability_Index'))
-            
-            extended_source_names=np.array(source_info('Extended_Source_Name'))
-            
-            right_ascensions=np.array(source_info('RAJ2000'))
-            declinations=np.array(source_info('DEJ2000'))
-            
-            power_law_fluxes=np.array(source_info('PL_Flux_Density'))
-            log_parabola_fluxes=np.array(source_info('LP_Flux_Density'))
-            cutoff_fluxes=np.array(source_info('PLEC_Flux_Density'))
-            
-            pivot_energies=np.array(source_info('Pivot_Energy'))
-            
-            power_law_indices=np.array(source_info('PL_Index'))
-            
-            log_parabola_indices=np.array(source_info('LP_Index'))
-            log_parabola_betas=np.array(source_info('LP_beta'))
-            
-            cutoff_indices=np.array(source_info(('PLEC_IndexS' if self.DR==3 else 'PLEC_Index')))
-            cutoff_expfactors=np.array(source_info(('PLEC_ExpfactorS' if self.DR==3 else 'PLEC_Expfactor')))
-            cutoff_expindices=np.array(source_info('PLEC_Exp_Index'))
-            
-            spectral_types=np.array(source_info('SpectrumType'))
+            catalog_sources=pd.DataFrame(np.c_[source_info('RAJ2000'),
+                                               source_info('DEJ2000'),
+                                               source_info('Signif_Avg'),
+                                               source_info('Variability_Index'),
+                                               source_info('Extended_Source_Name'),
+                                               source_info('Pivot_Energy'),
+                                               source_info('PL_Flux_Density'),
+                                               source_info('PL_Index'),
+                                               source_info('LP_Flux_Density'),
+                                               source_info('LP_Index'),
+                                               source_info('LP_beta'),
+                                               source_info('PLEC_Flux_Density'),
+                                               source_info(('PLEC_IndexS' if self.DR==3 else 'PLEC_Index')),
+                                               source_info(('PLEC_ExpfactorS' if self.DR==3 else 'PLEC_Expfactor')),
+                                               source_info('PLEC_Exp_Index'),
+                                               [model.strip() for model in source_info('SpectrumType')]],
+                                         columns=['RA','DEC','Signif_Avg','Variability_Index',
+                                                  'Extended_Name','Pivot_Energy','PL_Flux_Density',
+                                                  'PL_Index','LP_Flux_Density','LP_Index',
+                                                  'LP_beta','PLEC_Flux_Density','PLEC_Index1',
+                                                  'PLEC_Expfactor','PLEC_Index2','Model'],
+                                         index=[name.strip() for name in source_info('Source_Name')])
 
-        #calculate the source distances with respect to the ROI center
-        self.source_distances=angular_separation(self.ROI[0],self.ROI[1],
-                             right_ascensions,declinations)
+        #now we need to convert some columns to floats
+        to_float_columns=['RA','DEC','Signif_Avg','Variability_Index',
+                          'Pivot_Energy','PL_Flux_Density','PL_Index',
+                          'LP_Flux_Density','LP_Index','LP_beta',
+                          'PLEC_Flux_Density','PLEC_Index1',
+                          'PLEC_Expfactor','PLEC_Index2']
+        
+        catalog_sources[to_float_columns]=catalog_sources[to_float_columns].astype(float)
+        
+        #calculate the distance from the roi for each source
+        catalog_sources=pd.concat([catalog_sources,
+                                   pd.DataFrame(angular_separation(self.ROI[0],self.ROI[1],
+                                                    catalog_sources.RA.to_numpy(),
+                                                    catalog_sources.DEC.to_numpy()),columns=['roi_distance'],
+                                                index=catalog_sources.index)],axis=1).copy()
 
-        #get a mask for sources in the distance range we care about
-        #and then sort them in ascending order
-        source_mask=self.source_distances<=(self.ROI[2]+self.extra_radius)
-        self.source_distances=self.source_distances[source_mask]
+        #trim things down to just those sources we want to add
+        catalog_sources=catalog_sources[catalog_sources.roi_distance<=(self.ROI[2]+self.extra_radius)]
 
-        distance_index=self.source_distances.argsort()
-        self.source_distances=self.source_distances[distance_index]
+        #and now sort the columns in order of ascending roi_distance
+        catalog_sources.sort_values(by='roi_distance',ascending=True,inplace=True)
 
-        #now, downselect all the other arrays
-        right_ascensions=right_ascensions[source_mask][distance_index]
-        declinations=declinations[source_mask][distance_index]
-        
-        names=names[source_mask][distance_index]
-        
-        average_significances=average_significances[source_mask][distance_index]
-        variability_indices=variability_indices[source_mask][distance_index]
-        
-        extended_source_names=extended_source_names[source_mask][distance_index]
-        
-        power_law_fluxes=power_law_fluxes[source_mask][distance_index]
-        log_parabola_fluxes=log_parabola_fluxes[source_mask][distance_index]
-        cutoff_fluxes=cutoff_fluxes[source_mask][distance_index]
-        
-        pivot_energies=pivot_energies[source_mask][distance_index]
-        
-        power_law_indices=power_law_indices[source_mask][distance_index]
-        
-        log_parabola_indices=log_parabola_indices[source_mask][distance_index]
-        log_parabola_betas=log_parabola_betas[source_mask][distance_index]
-        
-        cutoff_indices=cutoff_indices[source_mask][distance_index]
-        cutoff_expfactors=cutoff_expfactors[source_mask][distance_index]
-        cutoff_expindices=cutoff_expindices[source_mask][distance_index]
-        
-        spectral_types=spectral_types[source_mask][distance_index]
+        #to be consistent with the get_sources_xml method, save the distances
+        self.source_distances=catalog_sources.roi_distance.to_numpy(copy=True)
 
         self.sources={}
 
-        for idx in range(len(names)):
+        for source_name,row in catalog_sources.iterrows():
             #check if the source is extended or not, decide on name for source
             #and if it is extended
-            if names[idx][-1]=='e':
-                name=(names[idx].strip() if self.extended_catalog_names else extended_source_names[idx])
-                self.sources.update([(name,{'roi_distance':self.source_distances[idx]})])
+            if source_name[-1]=='e':
+                name=source_name if self.extended_catalog_names else row.Extended_Name
+                self.sources.update([(name,{'roi_distance':row.roi_distance})])
                 self.sources[name].update([('Extended',not self.force_point_sources)])
             else:
-                name=names[idx].strip()
-                self.sources.update([(name,{'roi_distance':self.source_distances[idx]})])
+                name=source_name
+                self.sources.update([(name,{'roi_distance':row.roi_distance})])
                 self.sources[name].update([('Extended',False)])
             
             #evaluate variability and significance threshold info
             #as well as the RA and DEC to be used if building a .reg file
-            self.sources[name].update([('variable',variability_indices[idx]>=self.variability_threshold),
-                         ('significant',average_significances[idx]>=self.sigma_to_free),
-                         ('RA',right_ascensions[idx]),('DEC',declinations[idx])])
+            self.sources[name].update([('variable',row.Variability_Index>=self.variability_threshold),
+                         ('significant',row.Signif_Avg>=self.sigma_to_free),
+                         ('RA',row.RA),('DEC',row.DEC)])
 
             #now get source spectral information in the form we need
             #I need to verify that PowerLaw, LogParabola, and PLSuperExpCutoff4
             #are the only models we have in 4FGL DR 1, 2, and 3
-            if spectral_types[idx].strip()=='PowerLaw':
+            if row.Model=='PowerLaw':
                 self.sources[name].update([('spectrum',
                     {'model':'PowerLaw',
-                     'Prefactor':power_law_fluxes[idx],
-                     'Index':power_law_indices[idx],
-                     'Scale':pivot_energies[idx]})])
+                     'Prefactor':row.PL_Flux_Density,
+                     'Index':row.PL_Index,
+                     'Scale':row.Pivot_Energy})])
 
-            elif spectral_types[idx].strip()=='LogParabola':
+            elif row.Model=='LogParabola':
                 self.sources[name].update([('spectrum',
                     {'model':'LogParabola',
-                     'norm':log_parabola_fluxes[idx],
-                     'alpha':log_parabola_indices[idx],
-                     'beta':log_parabola_betas[idx],
-                     'Eb':pivot_energies[idx]})])
+                     'norm':row.LP_Flux_Density,
+                     'alpha':row.LP_Index,
+                     'beta':row.LP_beta,
+                     'Eb':row.Pivot_Energy})])
 
             else:
                 if self.DR==3:
                     self.sources[name].update([('spectrum',
                         {'model':'PLSuperExpCutoff4',
-                         'Prefactor':cutoff_fluxes[idx],
-                         'IndexS':cutoff_indices[idx],
-                         'Scale':pivot_energies[idx],
-                         'ExpfactorS':cutoff_expfactors[idx],
-                         'Index2':cutoff_expindices[idx]})])
+                         'Prefactor':row.PLEC_Flux_Density,
+                         'IndexS':row.PLEC_Index1,
+                         'Scale':row.Pivot_Energy,
+                         'ExpfactorS':row.PLEC_Expfactor,
+                         'Index2':row.PLEC_Index2})])
                 else:
+                    #for PLSuperExpCutoff2, we need to modify the flux density value in the catalog
+                    #do it here and not in the PLSuperExpCutoff2 Spectrum class function
                     self.sources[name].update([('spectrum',
                         {'model':'PLSuperExpCutoff2',
-                         'Prefactor':cutoff_fluxes[idx],
-                         'Index1':cutoff_indices[idx],
-                         'Scale':pivot_energies[idx],
-                         'Expfactor':cutoff_expfactors[idx],
-                         'Index2':cutoff_expindices[idx]})])
+                         'Prefactor':row.PLEC_Flux_Density*np.exp(row.Expfactor*row.Pivot_Energy**row.PLEC_Index2),
+                         'Index1':row.PLEC_Index1,
+                         'Scale':row.Pivot_energy,
+                         'Expfactor':row.PLEC_Expfactor,
+                         'Index2':row.PLEC_Index2})])
 
             #now for the spatial information
             #check if extended, this flag already uses force_point_sources flag
             if self.sources[name]['Extended']:
                 #do extended stuff
-                row=extended_sources.loc[extended_source_names[idx]]
+                ext_row=extended_sources.loc[row.Extended_Name]
                 #if one of the 'Radial' models
-                if row.function[:6]=='Radial':
+                if ext_row.function[:6]=='Radial':
                     self.sources[name].update([('spatial',
-                        {'spatial_model':'RadialGaussian' if row.function=='RadialGauss' else row.function,
-                         'RA':row.RA,
-                         'DEC':row.DEC})])
-                    if row.function=='RadialDisk':
-                        self.sources[name]['spatial'].update([('Radius',row.extent)])
+                        {'spatial_model':'RadialGaussian' if ext_row.function=='RadialGauss' else ext_row.function,
+                         'RA':ext_row.RA,
+                         'DEC':ext_row.DEC})])
+                    if ext_row.function=='RadialDisk':
+                        self.sources[name]['spatial'].update([('Radius',ext_row.extent)])
                     else:
-                        self.sources[name]['spatial'].update([('Sigma',row.extent/(-2*np.log(0.32))**0.5)])
+                        self.sources[name]['spatial'].update([('Sigma',ext_row.extent/(-2*np.log(0.32))**0.5)])
 
                 #otherwise it is a spatial map
                 else:
                     self.sources[name].update([('spatial',
                         {'spatial_model':'SpatialMap',
-                         'spatial_file':row.file})])
+                         'spatial_file':ext_row.file})])
 
             #point source
             else:
                 self.sources[name].update([('spatial',
                     {'spatial_model':'SkyDir',
-                     'RA':right_ascensions[idx],
-                     'DEC':declinations[idx]})])
+                     'RA':row.RA,
+                     'DEC':row.DEC})])
 
-
-
+#define a custom bool class so that command line arguments such as 'False' or 'True' will
+#evaluate correctly as opposed to always evaluating to True
 def mybool(Input):
     return {'True':True,'False':False,'T':True,'F':False,'t':True,'f':False,'TRUE':True,'FALSE':False,"true":True,"false":False,"1":True,"0":False}.get(Input)
 
+#function to be done when called from command line interface
 def cli():
     import argparse
     
     helpString="Creates an XML model from the 4FGL catalog (DR 1, 2, or 3) using FITS or XML catalog version\
             for a specific ROI specified through input coordinates or taken from an input event file,\
             the default radius for including sources is 10 degrees beyond the ROI radius,\
-            sources with free parameters within the original extraction radius are chosen based on nearness to center, significance, and variability."
+            sources with free parameters within the original extraction radius are chosen\
+            based on nearness to center, significance, and variability."
     parser=argparse.ArgumentParser(description=helpString)
     parser.add_argument("catalog",type=str,help="Path to catalog file to use, can be FITS or xml.")
     
@@ -569,7 +548,7 @@ def cli():
     parser.add_argument("-G","--galactic_file",type=str,default='gll_iem_v07.fits',
                 help="Name and location of Galactic diffuse model to use, will default to gll_iem_v07.fits.")
     
-    parser.add_argument("-g","--galactic_ame",type=str,default='gll_iem_v07',
+    parser.add_argument("-g","--galactic_name",type=str,default='gll_iem_v07',
                 help="Name of Galactic diffuse component in output model, will default to gll_iem_v07.")
     
     parser.add_argument("-I","--isotropic_file",type=str,default='iso_P8R3_SOURCE_V3_v1.txt',
@@ -586,7 +565,8 @@ def cli():
                 help="Path to directory with LAT extended source templates, will default to STs default.")
     
     parser.add_argument("-r","--free_radius",type=float,default=-1.,
-                help="Radius, in degrees, from ROI center beyond which all source parameters should be fixed, will default to selection radius.")
+                help="Radius, in degrees, from ROI center beyond which all source parameters should be fixed,\
+will default to selection radius.")
     
     parser.add_argument("-R","--max_free_radius",type=float,default=None,
                 help="Absolute maximum radius, in degrees, from ROI center beyond which all source parameters should be fixed,\
@@ -621,9 +601,9 @@ even if source is beyond radius limit or below TS limit, default is True.",
                 help='Name of output .reg file, if make_region set to true.  Will default to\
 ROI_"output_name".reg if not specified.')
     
-    parser.add_argument("-GIF","--galactic_index_free",type=mybool,default=False,
+    parser.add_argument("-GIF","--galactic_index_free",type=mybool,default=True,
                 help="Flag to use a power-law modification to the Galactic diffuse model spectrum\
-and have the index be free, default is False.",
+and have the index be free, default is True.",
                 nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
     
     parser.add_argument("-wd","--write_directory",type=str,default='',
@@ -645,9 +625,9 @@ default is False.",nargs="?",const=True,
     if args.event_file is None:
         if args.RA is None or args.DEC is None or args.radius is None:
             raise ValueError('No Fermi LAT event file provided but one of RA, DEC, or radius is None.')
-        ROI=[RA,DEC,radius]
+        ROI=[args.RA,args.DEC,args.radius]
     else:
-        ROI=[args.event_file]
+        ROI=args.event_file
 
     #Make a SourceList object and then call the makeModel method
     source_list=SourceList(args.catalog,ROI,args.output_name,args.DR,args.write_directory)
