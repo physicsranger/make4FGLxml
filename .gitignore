@@ -4,3 +4,11 @@ __pycache__/
 #ignore .xml and .reg files from testing/working in repo directory
 *.xml
 *.reg
+
+#ignore some pyInstaller stuff
+dist
+build
+*.spec
+
+#ignore possible mac files
+*.DS_Store
