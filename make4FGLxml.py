@@ -77,16 +77,20 @@ class SourceList:
                galactic_index_free=True,use_old_names=False):
 
         if os.path.dirname(galactic_file)=='':
-            if self.fermi_dir is None:
-                galactic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',galactic_file])
-            else:
-                galactic_file=os.path.join(self.fermi_dir,'refdata','fermi','galdiffuse',galactic_file)
+            #if self.fermi_dir is None:
+            galactic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',galactic_file])
+            #not sure if we should hardcode the path or not, makes it difficult if trying to work
+            #with different fermitools conda installs
+            #else:
+            #    galactic_file=os.path.join(self.fermi_dir,'refdata','fermi','galdiffuse',galactic_file)
 
         if os.path.dirname(isotropic_file)=='':
-            if self.fermi_dir is None:
-                isotropic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',isotropic_file])
-            else:
-                isotropic_file=os.path.join(self.fermi_dir,'refdata','fermi','galdiffuse',isotropic_file)
+            #if self.fermi_dir is None:
+            isotropic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',isotropic_file])
+            #not sure if we should hardcode the path or not, makes it difficult if trying to work
+            #with different fermitools conda installs
+            #else:
+            #    isotropic_file=os.path.join(self.fermi_dir,'refdata','fermi','galdiffuse',isotropic_file)
         
         self.galactic_file=galactic_file
         self.galactic_name=galactic_name
@@ -106,7 +110,7 @@ class SourceList:
         self.norms_free_only=norms_free_only
         self.use_old_names=use_old_names
 
-        self.extended_directory=extended_directory if extended_directory is None else\
+        self.extended_directory=extended_directory if extended_directory is not None else\
                     os.sep.join(['$(FERMI_DIR)','data','pyBurstAnalysisGUI','templates'])
         
         self.sigma_to_free=sigma_to_free
@@ -116,7 +120,7 @@ class SourceList:
         self.create_region_model()
         
         if make_region:
-            if region_file is None:
+            if region_file is None or region_file=='':
                 region_file=os.path.basename(self.output_name).split('.')[:-1]
                 region_file=reduce(lambda s1,s2:s1+s2,region_file).join(['ROI_','.reg'])
                 
@@ -353,6 +357,9 @@ class SourceList:
             if self.sources[name]['Extended']:
                 self.sources[name].update([('spatial',
                     {'spatial_model':spatial[0].getAttribute('type')})])
+                if self.sources[name]['spatial'].get('spatial_model') in ['SpatialMap','MapCubeFunction']:
+                    self.sources[name]['spatial'].update([('spatial_file',
+                                        spatial[0].getAttribute('file').split('/')[-1])])
                 for parameter in spatial[0].getElementsByTagName('parameter'):
                     self.sources[name]['spatial'].update([(parameter.getAttribute('name'),
                     parameter.getAttribute('value'))])
@@ -639,6 +646,5 @@ default is False.",nargs="?",const=True,
                   args.sigma_to_free,args.variable_free,args.force_point_sources,
                   args.extended_catalog_names,args.make_region,args.region_file,
                   args.galactic_index_free,args.use_old_names)
-    
     
 if __name__=='__main__': cli()

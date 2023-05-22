@@ -7,10 +7,10 @@ def get_ROI_from_event_file(event_file_name):
     #open the file and get the DSKEY info from the header
     with pyfits.open(event_file_name) as event_file:
         num=event_file[1].header['NDSKEYS']
-        header=even_file[1].header
+        header=event_file[1].header
         
-        dstypes={event_file[1].header[f'DSTYP{idx}']:\
-            event_file[1].header[f'DSVAL{idx}']\
+        dstypes={event_file[1].header[f'DSTYP{idx+1}']:\
+            event_file[1].header[f'DSVAL{idx+1}']\
             for idx in range(event_file[1].header['NDSKEYS'])}
     
     #now attempt to get the position information and return

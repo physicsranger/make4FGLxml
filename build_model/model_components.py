@@ -306,21 +306,21 @@ class Spatial:
     def RadialDisk(self,RA,DEC,Radius,spatial_model=None):
         #do some sanity checks, including converting Radius to float
         Radius=float(Radius)
-        if abs(RA)>360:
+        if abs(float(RA))>360:
             raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
-        if abs(DEC)>90:
+        if abs(float(DEC))>90:
             raise ValueError(f'Input DEC value of {DEC} is invalid, must be between -90 and 90.')
-        if Radius<=0:
+        if float(Radius)<=0:
             raise ValueError(f'Input Radius value of {Radius} is invalid, must be >0.')
         
-        self.RA=RA
-        self.DEC=DEC
-        self.Radius=Radius
+        self.RA=float(RA)
+        self.DEC=float(DEC)
+        self.Radius=float(Radius)
 
         self.spatial.setAttribute('type','RadialDisk')
 
         self.spatial.appendChild(parameter_element(free='0',name='Radius',
-                maximum=max(10,self.extent*1.5),minimum='0',scale='1',value=self.Radius))
+                maximum=max(10,self.Radius*1.5),minimum='0',scale='1',value=self.Radius))
         self.spatial.appendChild(parameter_element(free='0',name='RA',maximum='360.0',
                 minimum='-360.0',scale='1.0',value=f'{self.RA:.4f}'))
         self.spatial.appendChild(parameter_element(free='0',name='DEC',maximum='90.0',
@@ -329,35 +329,36 @@ class Spatial:
     def RadialGaussian(self,RA,DEC,Sigma,spatial_model=None):
         #do some sanity checks, including converting Sigma to a float
         Sigma=float(Sigma)
-        if abs(RA)>360:
+        if abs(float(RA))>360:
             raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
-        if abs(DEC)>90:
+        if abs(float(DEC))>90:
             raise ValueError(f'Input DEC value of {DEC} is invalid, must be between -90 and 90.')
-        if Radius<=0:
+        if float(Sigma)<=0:
             raise ValueError(f'Input Sigma value of {Sigma} is invalid, must be >0.')
         
-        self.RA=RA
-        self.DEC=DEC
-        self.Sigma=Sigma
+        self.RA=float(RA)
+        self.DEC=float(DEC)
+        self.Sigma=float(Sigma)
 
         self.spatial.setAttribute('type','RadialGaussian')
 
         self.spatial.appendChild(parameter_element(free='0',name='Sigma',
-                maximum=max(10,self.extent*1.5),minimum='0',scale='1',value=self.Sigma))
+                maximum=max(10,self.Sigma*1.5),minimum='0',scale='1',value=self.Sigma))
         self.spatial.appendChild(parameter_element(free='0',name='RA',maximum='360.0',
                 minimum='-360.0',scale='1.0',value=f'{self.RA:.4f}'))
         self.spatial.appendChild(parameter_element(free='0',name='DEC',maximum='90.0',
                 minimum='-90.0',scale='1.0',value=f'{self.DEC:.4f}'))
 
-    def SpatialMap(self,spatial_file,spatial_model=None):
+    def SpatialMap(self,spatial_file,Prefactor=1,spatial_model=None):
         self.spatial_file=spatial_file
+        self.Prefactor=Prefactor
 
         self.spatial.setAttribute('type','SpatialMap')
         self.spatial.setAttribute('file',self.spatial_file)
         self.spatial.setAttribute('map_based_integral','true')
 
         self.spatial.appendChild(parameter_element(free="0",name="Prefactor",maximum="1000",
-                minimum="0.001",scale="1",value="1"))
+                minimum="0.001",scale="1",value=self.Prefactor))
 
     def ConstantValue(self,Value=1,spatial_model=None):
         #check on inputs, including making sure value is a float
