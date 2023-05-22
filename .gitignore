@@ -9,6 +9,7 @@ __pycache__/
 dist
 build
 *.spec
+*.hypothesis
 
 #ignore possible mac files
 *.DS_Store
