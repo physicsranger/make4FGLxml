@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.vbox_layout.addWidget(self.control_widget)
         self.vbox_layout.addWidget(self.terminal_widget)
 
-        self.main_widget=QWidget()
+        self.main_widget=QWidget(parent=self)
         self.main_widget.setLayout(self.vbox_layout)
 
         self.setCentralWidget(self.main_widget)
@@ -52,5 +52,5 @@ def main():
     
     app.exec()
 
-if __name__=='main':
+if __name__=='__main__':
     main()
