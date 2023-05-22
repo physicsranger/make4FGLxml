@@ -70,7 +70,7 @@ source_list.make_model(free_radius=6,max_free_radius=8,sigma_to_free=12)
 As noted, the previous example assumes that the ```source_list``` object was created referencing the FITS version of the 4FGL catalog, so the values given mean that sources only have free spectral parameters if they were found in the catalog with $\geq12\sigma$ average significance and are within 6 degrees of the ROI center or if they were found to be significantly variable in the catalog and are within 8 degrees of the ROI center.  If the ```source_list``` object had been created referencing the XML version of the catalog, the _sigma\_to\_free_ parameter applies to the source test statistic, so a value more like 100 or 200 might be more suitable than 12, depending on the use case.
 
 ### Using the Command Line Interface
-The script can be called as an executable from the command line.  You'll need to add the repo to your PATH to be able to call it.  You can then invoke the script either on it's own:
+The script can be called as an executable from the command line.  Note, you may need to make the script executable from the command line via ```chmod +x make4FGLxml.py```.  You'll need to add the repo to your PATH to be able to call it.  You can then invoke the script either on it's own:
 
 ```make4FGLxml.py --options```  
 
