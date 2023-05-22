@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-import os,sys
+import sys
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
     QVBoxLayout,
     QWidget)
-from PyQt6.QtCore import Qt
 
 #custom imports
 from make4FGLxml_Components.control import ControlWidget
@@ -36,8 +35,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.main_widget)
 
         #now we want to redirect output from the 'terminal'
-        #or any print statement
-        #to out terminal widget
+        #or any print statement to our terminal widget
         self.old_stdout=sys.stdout
         self.old_stderr=sys.stderr
 
@@ -47,7 +45,7 @@ class MainWindow(QMainWindow):
 
 #I'll likely need to tweak things a bit, but this should work
 def main():
-    app=QApplication([])
+    app=QApplication()
     
     window=MainWindow()
     window.show()

@@ -1,4 +1,4 @@
-import sys, os
+import sys
 
 from PyQt6.QtWidgets import (
     QWidget,
