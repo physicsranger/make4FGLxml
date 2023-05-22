@@ -99,5 +99,8 @@ The GUI is still a work in progress and has not been fully tested; however, earl
 from make4FGLxml_GUI import main
 main()
 ```
+or you can call it directly from the command line (though you may have to run ```chmod +x make4FGLxml_GUI.py```.
 
-I am currently working on getting things to actually work from the command line, and eventually for the ability to make a standalone executable with pyInstaller.
+If you have PyInstaller installed, you can run the ```install.py``` script which will create an executable in a folder called dist.  Currently, this build quickly on Mac ventura but takes a while to build on Windows 10.  The windows installer is also quite a large file size and slow to open.  I need to trace down what to add to the exlcudes (alternatively, using py2exe for the Windows version might be a better bet).
+
+In summary, feel free to test out the GUI.  I plan to add more detailed instructions for using the GUI soon and to add more functionality, so stay tuned.
