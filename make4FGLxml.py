@@ -378,19 +378,19 @@ class SourceList:
             source_info=catalog['LAT_Point_Source_Catalog'].data.field
             extended_info=catalog['ExtendedSources'].data.field
 
-            extended_sources=pd.DataFrame(np.c_[extended_info('Spatial_Filename'),
-                                                extended_info('Spatial_Function'),
+            extended_sources=pd.DataFrame(np.c_[[name.strip() for name in extended_info('Spatial_Filename')],
+                                                [function.strip() for function in extended_info('Spatial_Function')],
                                                 extended_info('Model_SemiMajor'),
                                                 extended_info('RAJ2000'),
                                                 extended_info('DEJ2000')],
                                           columns=['file','function','extent','RA','DEC'],
-                                          index=extended_info('Source_Name'))
+                                          index=[name.strip() for name in extended_info('Source_Name')])
             
             catalog_sources=pd.DataFrame(np.c_[source_info('RAJ2000'),
                                                source_info('DEJ2000'),
                                                source_info('Signif_Avg'),
                                                source_info('Variability_Index'),
-                                               source_info('Extended_Source_Name'),
+                                               [name.strip() for name in source_info('Extended_Source_Name')],
                                                source_info('Pivot_Energy'),
                                                source_info('PL_Flux_Density'),
                                                source_info('PL_Index'),
@@ -506,7 +506,7 @@ class SourceList:
                     if ext_row.function=='RadialDisk':
                         self.sources[name]['spatial'].update([('Radius',ext_row.extent)])
                     else:
-                        self.sources[name]['spatial'].update([('Sigma',ext_row.extent/(-2*np.log(0.32))**0.5)])
+                        self.sources[name]['spatial'].update([('Sigma',float(ext_row.extent)/(-2*np.log(0.32))**0.5)])
 
                 #otherwise it is a spatial map
                 else:

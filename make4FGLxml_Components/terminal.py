@@ -25,7 +25,7 @@ class TerminalWidget(QWidget):
         self.terminal_out.append('')
         self.terminal_out.moveCursor(QTextCursor().MoveOperation(11))
         self.terminal_out.setReadOnly(True)
-
+        
         self.terminal_layout=QHBoxLayout()
         self.terminal_layout.setContentsMargins(0,0,0,0)
 

@@ -1,4 +1,4 @@
-#!/user/bin/env python
+#!/usr/bin/env python
 
 import os,sys
 from PyQt6.QtWidgets import (
