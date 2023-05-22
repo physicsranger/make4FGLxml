@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
 
 #I'll likely need to tweak things a bit, but this should work
 def main():
-    app=QApplication()
+    app=QApplication([])
     
     window=MainWindow()
     window.show()
