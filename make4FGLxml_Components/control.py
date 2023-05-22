@@ -1,4 +1,4 @@
-import sys,os
+import sys,os,warnings
 
 from PyQt6.QtWidgets import (
     QWidget,
@@ -116,15 +116,15 @@ class ControlWidget(QWidget):
 
         self.ROI_radius_entry=QLineEdit(parent=self.fourth_row)
         self.ROI_radius_entry.setValidator(self.radius_validator)
-        self.ROI_radius_entry.setFixedWidth(25)
+        self.ROI_radius_entry.setFixedWidth(35)
         
         #now need to monitor for when those values are changed
         #either by the user or programmatically
-        self.ROI_RA_entry.textEdited.connect(self.set_make_model_state)
-        self.ROI_RA_entry.textChanged.connect(self.set_make_model_state)
+        self.ROI_center_RA_entry.textEdited.connect(self.set_make_model_state)
+        self.ROI_center_RA_entry.textChanged.connect(self.set_make_model_state)
 
-        self.ROI_DEC_entry.textEdited.connect(self.set_make_model_state)
-        self.ROI_DEC_entry.textChanged.connect(self.set_make_model_state)
+        self.ROI_center_DEC_entry.textEdited.connect(self.set_make_model_state)
+        self.ROI_center_DEC_entry.textChanged.connect(self.set_make_model_state)
 
         self.ROI_radius_entry.textEdited.connect(self.set_make_model_state)
         self.ROI_radius_entry.textChanged.connect(self.set_make_model_state)
@@ -188,12 +188,16 @@ class ControlWidget(QWidget):
         self.variable_sources_free_check=QCheckBox("Free Variable Sources?",parent=self.seventh_row)
         self.force_point_source_check=QCheckBox("Change Extended Sources To Point Sources?",parent=self.seventh_row)
 
+        self.variable_sources_free_check.setChecked(True)
+
     def create_eighth_row(self):
         self.eighth_row=QWidget(parent=self)
         
         self.use_extended_catalog_names_check=QCheckBox("Use Catalog Names For Extended Sources?",parent=self.eighth_row)
         self.free_galactic_index_check=QCheckBox("Modify Galactic Spectrum By Power Law?",parent=self.eighth_row)
         self.use_old_name_convention_check=QCheckBox("Use '_4FGLJXXXX.X+XXXX' Naming Convention?",parent=self.eighth_row)
+
+        self.free_galactic_index_check.setChecked(True)
 
     def create_ninth_row(self):
         self.ninth_row=QWidget(parent=self)
@@ -498,13 +502,13 @@ class ControlWidget(QWidget):
     def set_make_model_state(self):
         #lots of things to check so that the make_model_button can be enabled
         if os.path.exists(self.catalog_entry.text()) and\
-           self.ROI_RA_entry.isValid() and\
-           self.ROI_DEC_entry.isValid() and\
-           self.ROI_radius_entry.isValid() and\
-           self.free_radius_entry.isValid() and\
-           self.max_free_radius_entry.isValid() and\
-           self.extra_radius_entry.isValid() and\
-           self.significance_entry.isValid() and\
+           self.ROI_center_RA_entry.hasAcceptableInput() and\
+           self.ROI_center_DEC_entry.hasAcceptableInput() and\
+           self.ROI_radius_entry.hasAcceptableInput() and\
+           self.free_radius_entry.hasAcceptableInput() and\
+           self.max_free_radius_entry.hasAcceptableInput() and\
+           self.extra_radius_entry.hasAcceptableInput() and\
+           self.significance_entry.hasAcceptableInput() and\
            self.galactic_model_file_entry.text()!='' and\
            self.galactic_name_entry.text()!='' and\
            self.isotropic_template_file_entry.text()!='' and\
@@ -576,7 +580,8 @@ class ControlWidget(QWidget):
                                         start_dir,'FITS files (*.fit*);;All Files (*)')[0]
 
         #set the returned value as the corresponding entry text
-        self.galactic_model_file_entry.setText(galactic_file)
+        if galactic_file!='' and galactic_file is not None:
+            self.galactic_model_file_entry.setText(galactic_file)
         return
 
     #function to choose the Isotropic diffuse component template file
@@ -590,38 +595,43 @@ class ControlWidget(QWidget):
                             start_dir,'Text files (*.txt);;All Files (*)')[0]
 
         #set the returned value as the corresponding entry text
-        self.isotropic_template_file_entry.setText(isotropic_file)
-        return
+        if isotropic_file!='' and isotropic_file is not None:
+            self.isotropic_template_file_entry.setText(isotropic_file)
 
     #function to get the region of interest information from an event file
     def get_ROI_center(self):
         #first, we need to determine if the current value in the event file entry is valid
         if not os.path.exists(self.event_file_entry.text()):
             #if we get in here, open a file dialog to choose an event file, start at the current dir
-            event_file=QFileDialog(self,'Choose Fermi LAT Event File',os.getcwd(),
+            event_file=QFileDialog.getOpenFileName(self,'Choose Fermi LAT Event File',os.getcwd(),
                             "FITS files (*.fit*);;All Files (*)")[0]
             self.event_file_entry.setText(event_file)
         else:
             event_file=self.event_file_entry.text()
 
-        #now we feed this to one of the make4FGLxml utility functions
-        RA,DEC,radius=get_ROI_from_event_file(event_file)
+        #check that the event entry is not empty
+        if event_file!='' and event_file is not None:
+            #now we feed this to one of the make4FGLxml utility functions
+            RA,DEC,radius=get_ROI_from_event_file(event_file)
+    
+            #finish by setting the corresponding entry
+            self.ROI_center_RA_entry.setText(f'{RA:.3f}')
+            self.ROI_center_DEC_entry.setText(f'{DEC:.3f}')
+            self.ROI_radius_entry.setText(f'{radius:.1f}')
 
-        #finish by setting the corresponding entry
-        self.ROI_center_RA_entry.setText(f'{RA:f}')
-        self.ROI_center_DEC_entry.setText(f'{DEC:f}')
-        self.ROI_center_radius_entry.setText(f'{radius:f}')
-        return
+        else:
+            warnings.warn('Note, must select a valid event file')
 
     #need to set conditions for the create_model button to be active or not
     #so that I don't have to do the argument checks here, use the isValid method
     #for the QLineEdit objects and check that files/directories exist
     def create_model(self):
         #do stuff to make the XML file (and possible .reg file)
+        
         source_list=SourceList(self.catalog_entry.text(),
                                [float(self.ROI_center_RA_entry.text()),
-                                  float(self.ROI_center_DEC_entry.text),
-                                  float(self.ROI_center_radius_entry.text)],
+                                  float(self.ROI_center_DEC_entry.text()),
+                                  float(self.ROI_radius_entry.text())],
                                self.output_file_entry.text(),
                                self.DR_spinbox.value(),
                                self.save_directory_entry.text())
@@ -634,7 +644,7 @@ class ControlWidget(QWidget):
                                self.galactic_name_entry.text(),
                                self.isotropic_template_file_entry.text(),
                                self.isotropic_name_entry.text(),
-                               self.normalizations_only.isChecked(),
+                               self.normalizations_only_check.isChecked(),
                                self.extended_template_directory_entry.text(),
                                float(self.free_radius_entry.text()),
                                float(self.max_free_radius_entry.text()),
