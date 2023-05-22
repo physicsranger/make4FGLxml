@@ -93,4 +93,11 @@ When specifying optional arguments (represented by ```--options``` in the exampl
 ```make4FGLxml.py --help```
 
 ### Using the GUI
-The GUI is still a work in progress and has not been fully tested...
+The GUI is still a work in progress and has not been fully tested; however, early testing does suggest it is mostly working, but use with caution.  Currently, you can launch the GUI from an interactive python session:
+
+```python
+from make4FGLxml_GUI import main
+main()
+```
+
+I am currently working on getting things to actually work from the command line, and eventually for the ability to make a standalone executable with pyInstaller.
