@@ -22,15 +22,6 @@ def parameter_element(free,name,maximum,minimum,scale,value):
     parameter.setAttribute('value',str(value))
     return parameter
 
-#return a list of the available spectral models
-#note, this includes all listed on the FSSC
-#but th emore common models are 'up front'
-def spectral_models():
-    return ['PowerLaw','LogParabola','PLSuperExpCutoff4','PowerLaw2','BrokenPowerLaw',
-            'PLSuperExpCutoff2','FileFunction','BrokenPowerLaw2','SmoothBrokenPowerLaw',
-            'PLSuperExpCutoff','PLSuperExpCutoff3','ExpCutoff','BPLExpCutoff','Gaussian',
-            'ConstantValue','BandFunction','DMFitFunction']
-
 ###########################################################################################
 #class for the spectral models, will need a function for each model
 #currently, focus mainly on those models we'll run into in the catalog
@@ -628,13 +619,6 @@ class Spectrum:
 #class for the spatial models
 #will only need to add the spatial class attribute/object to a larger XML document
 ###########################################################################################
-
-#return a list of all implemented spatial models
-#this includes all listed at the FSSC as well as the
-#'Radial' extended source models
-def spatial_models():
-    return ['SkyDir','RadialDisk','RadialGaussian','SpatialMap',
-            'ConstantValue','MapCubeFunction']
 
 class Spatial:
     def __init__(self,spatial_model,**kwargs):
