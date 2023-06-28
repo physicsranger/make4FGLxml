@@ -3,7 +3,9 @@
 from build_model.utilities import (
     angular_separation,
     get_ROI_from_event_file,
-    build_region)
+    build_region,
+    valid_spatial_input,
+    valid_spectrum_input)
 
 from build_model.model_components import Spectrum,Spatial
 
@@ -117,7 +119,7 @@ class SourceList:
         self.make_region=make_region
         self.galactic_index_free=galactic_index_free
 
-        self.create_region_model()
+        self.create_XML_model()
         
         if make_region:
             if region_file is None or region_file=='':
@@ -130,7 +132,7 @@ class SourceList:
             build_region(self.region_file,self.sources)
             print(f'done!\nFile saved as {self.region_file}.')
     
-    def create_region_model(self):
+    def create_XML_model(self):
         print(f'Creating spatial and spectral model from the 4FGL DR-{self.DR} catalog: {self.catalog_file}.')
         
         if os.path.basename(self.catalog_file).split('.')[-1].lower()=='xml':
@@ -520,6 +522,91 @@ class SourceList:
                     {'spatial_model':'SkyDir',
                      'RA':row.RA,
                      'DEC':row.DEC})])
+
+    #function to add a non-4FGL source to the model
+    #will either overwrite
+    def add_source(self,source_name,spatial_info,spectrum_info,
+                   diffuse=False,new_model_name=None,overwrite=False):
+        #first, do a check on the model to make sure it exists
+        if not os.path.exists(self.output_name):
+            raise RuntimeError(f'{self.output_name} has not been created yet,\
+ cannot use add_source until make_model has been successfully run.')
+
+        if new_model_name is not None:
+            if os.path.dirname(new_model_name)=='':
+                #need to think about this, should we assume it is in the same directory
+                #or use the current working directory?
+                new_model_name=os.path.join(\
+                    os.path.dirname(self.output_name),
+                    new_model_name)
+                warnings.warn('Assuming same save directory as main model.')
+
+            if os.path.exists(new_model_name):
+                if overwrite:
+                    warnings.warn(f'File {new_model_name} exists, will be overwritten.')
+                else:
+                    raise RuntimeError(f'File {new_model_name} exists but overwrite flag set to False.')
+
+        else:
+            if overwrite:
+                new_model_name=self.output_name
+                warnings.warn('No new file name given, will overwrite existing model.')
+
+            else:
+                raise RuntimeError('No new file name given but overwrite flag set to False.')
+
+        #need to ensure that the dictionaries include minimum info
+        #before proceeding with trying to add a source
+        #note, these functions do not check if extra parameters
+        #are included, which will cause an error
+        if not valid_spatial_input(spatial_info):
+            raise RuntimeError('Dictionary with spatial info missing required\
+ inputs or has invalid model selection.')
+
+        if not valid_spectrum_input(spectrum_info):
+            raise RuntimeError('Dictionary with spectrum info missing required\
+ inputs or has invalid model selection.')
+        
+        spatial=Spatial(**spatial_info)
+        spectrum=Spectrum(**spectrum_info)
+
+        #now create a new xml
+        output_xml=minidom.getDOMImplementation().createDocument(None,'source_library',None)
+        output_xml.documentElement.setAttribute('title','source library')
+
+        #make a source element
+        source_out=output_xml.createElement('source')
+        source_out.setAttribute('name',source_name)
+        
+        #get the angular separation if spatial model has RA and DEC info
+        if {'RA','DEC'}.issubset(spatial_info.keys()):
+            source_sep=angular_separation(self.ROI[0],self.ROI[1],
+                                spatial_info.get('RA'),spatial_info.get('DEC'))
+            source_out.setAttribute('ROI_Center_Distance',f'{source_sep:.2f}')
+        
+        source_out.setAttribute('type','DiffuseSource' if diffuse else 'PointSource')
+
+        #append the spectral and spatial elements
+        source_out.appendChild(spectrum.spectrum)
+        source_out.appendChild(spatial.spatial)
+
+        #add the source element to our new xml
+        output_xml.documentElement.appendChild(source_out)
+
+        #now cycle
+        current_model=minidom.parse(self.output_name)
+        current_sources=np.array(catalog.getElementsByTagName('source'))
+
+        for source in current_sources:
+            output_xml.documentElement.appendChild(source)
+
+        out_string=filter(lambda s: len(s) and not s.isspace(),
+                  output_xml.toprettyxml(' ').splitlines(True))
+
+        with open(new_model_name,'w') as output_file:
+            output_file.write(''.join(out_string))
+
+        print(f'{source_name} added to model, saved as {new_model_name}')
 
 #define a custom bool class so that command line arguments such as 'False' or 'True' will
 #evaluate correctly as opposed to always evaluating to True

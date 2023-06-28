@@ -639,7 +639,7 @@ class ControlWidget(QWidget):
         #print to verify
         source_list.Print()
 
-        #now make the model an we're done
+        #now make the model and we're done
         source_list.make_model(self.galactic_model_file_entry.text(),
                                self.galactic_name_entry.text(),
                                self.isotropic_template_file_entry.text(),
