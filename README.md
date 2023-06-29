@@ -77,8 +77,11 @@ Once the XML model has been created, it is possible to add additional sources no
 #we will assume the source has RA = 123.45 and DEC = -12.345
 #we will also assume the user wants to call the model with the new source new.xml
 #and save it in the same directory as the original file
+
 source_list.add_point_source(source_name='NewSource',RA=123.45,DEC=-12.345,new_model_name='new.xml')
 ```
+
+Note, if the ```new_model_name``` argument is not specified, the code will attempt to overwrite the existing model file; however, the overwrite Flag is set to False by default so the user will get an error and have to rerun with ```overwite=True``` passed in as an additional argument, if they actually want to overwrite the existing file.
 
 The code will use sensible default values for the spectral parameters, but it is likely the user may want to adjust the parameters of 'NewSource' before running their likelihood analysis (this can be done via the BinnedAnalysis or UnbinnedAnalysis object so it doesn't necessarily take us back to a text editor).
 
@@ -115,6 +118,18 @@ source_list.add_source(source_name='NewSource',spatial_info=spatial_info,
 ```
 
 Note that we specify ```diffuse=True``` in the example above (the default is False, for a point source).  All spatial model types supported by the fermitools are implemented (a list of available models can be imported via ```from build_model.utilities import spatial_models```).
+
+If the user makes an XML model (via the GUI, command line interface, or an interactive session), does some analysis, and wants to add a source later, the steps are very straightforward.  Simply make a SourceList object providing the path to the existing XML model as the ```output_name``` argument.  Then, use either the ```add_source``` or ```add_point_source``` method **without** calling the ```make_model``` method, as shown below.
+
+```python
+source_list=SourceList(catalog_file='/some/path/to/gll_psc_v28.xml',[123.4,-12.3,15],
+                       output_name='my_LAT_model.xml',
+                       write_directory='/some/path/to/analysis/directory')
+
+#in this case, we're assuming that 'my_LAT_model.xml' already exists
+
+source_list.add_point_source(source_name='NewSource',RA=123.45,DEC=-12.345,new_model_name='new.xml')
+```
 
 ### Using the Command Line Interface
 The script can be called as an executable from the command line.  Note, you may need to make the script executable from the command line via ```chmod +x make4FGLxml.py```.  You'll need to add the repo to your PATH to be able to call it.  You can then invoke the script either on it's own:
