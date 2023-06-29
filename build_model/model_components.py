@@ -1,4 +1,5 @@
 from xml.dom import minidom
+import os
 import numpy as np
 
 #copied from Damien's macro
@@ -230,7 +231,7 @@ class Spectrum:
                      'maximum':10,'scale':-1,'value':self.Index2})
 
         self.parameters.append({'free':int(Beta_free),'name':'Beta','minimum':0.01,
-                     'maximum':10,'scale';1,'value':self.Beta})
+                     'maximum':10,'scale':1,'value':self.Beta})
 
         self.build()
 
@@ -272,15 +273,15 @@ class Spectrum:
                      'maximum':max(300,self.P1*1.5),'scale':1,'value':self.P1})
 
         self.parameters.append({'free':int(P2_free),'name':'P2','minimum':-1,'maximum':1,
-                     'scale':1,value=self.P2})
+                     'scale':1,value:self.P2})
 
         self.parameters.append({'free':int(P3_free),'name':'P3','minimum':-1,'maximum':1,
-                     'scale':1,value=self.P3})
+                     'scale':1,value:self.P3})
 
         self.build()
 
     def BPLExpCutoff(self,Prefactor=1e-12,Index1=1.8,Index2=2.3,BreakValue=1000,
-                  Eabs=10,P1=100,Prefactor_free=True,Index1_free=True,Index2_free,
+                  Eabs=10,P1=100,Prefactor_free=True,Index1_free=True,Index2_free=False,
                   BreakValue_free=True,Eabs_free=True,P1_free=False,model=None):
         #some checks on the inputs
         if Prefactor<0 or BreakValue<=0 or Eabs<=0:
@@ -497,7 +498,7 @@ class Spectrum:
         self.model_name='Gaussian'
         self.norm_par='Prefactor'
 
-        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,'maximum',1e6,
+        self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,'maximum':1e6,
                           'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
         self.parameters.append({'free':int(Mean_free),'name':'Mean','minimum':min(1e2,self.Mean*0.9),
@@ -543,7 +544,7 @@ class Spectrum:
                                 'scale':1,'value':self.alpha})
 
         self.parameters.append({'free':int(beta_free),'name':'beta','minimum':-5,'maximum':-1,
-                                'scale':1,'value'self.beta})
+                                'scale':1,'value':self.beta})
 
         self.parameters.append({'free':int(Ep_free),'name':'Ep','minimum':min(10,self.Ep*0.9),
                                 'maximum':max(10000,self.Ep*1.5),'scale':1,'value':self.Ep})

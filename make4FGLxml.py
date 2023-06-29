@@ -28,7 +28,8 @@ class SourceList:
             raise FileNotFoundError(2,'Could not access catalog file',catalog_file)
         
         if os.path.exists(output_name):
-            warnings.warn(f'Region model {output_name} already exists, will be overwritten.')
+            warnings.warn(f'Region XML model {output_name} already exists, will be overwritten\
+ (note, some systems may be case-insensitive).')
 
         if DR not in [1,2,3]:
             raise ValueError(f'DR={DR} is an invalid choice of data release, must be 1, 2, or 3.')
@@ -595,7 +596,7 @@ class SourceList:
 
         #now cycle
         current_model=minidom.parse(self.output_name)
-        current_sources=np.array(catalog.getElementsByTagName('source'))
+        current_sources=np.array(current_model.getElementsByTagName('source'))
 
         for source in current_sources:
             output_xml.documentElement.appendChild(source)
@@ -607,6 +608,9 @@ class SourceList:
             output_file.write(''.join(out_string))
 
         print(f'{source_name} added to model, saved as {new_model_name}')
+
+        self.output_name=new_model_name
+        print('SourceList object attribute "output_name" now points to new file')
 
 #define a custom bool class so that command line arguments such as 'False' or 'True' will
 #evaluate correctly as opposed to always evaluating to True
