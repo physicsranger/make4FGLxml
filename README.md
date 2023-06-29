@@ -71,7 +71,7 @@ source_list.make_model(free_radius=6,max_free_radius=8,sigma_to_free=12)
 
 As noted, the previous example assumes that the ```source_list``` object was created referencing the FITS version of the 4FGL catalog, so the values given mean that sources only have free spectral parameters if they were found in the catalog with $\geq12\sigma$ average significance and are within 6 degrees of the ROI center or if they were found to be significantly variable in the catalog and are within 8 degrees of the ROI center.  If the ```source_list``` object had been created referencing the XML version of the catalog, the _sigma\_to\_free_ parameter applies to the source test statistic, so a value more like 100 or 200 might be more suitable than 12, depending on the use case.
 
-Once the XML model has been created, it is possible to add additional sources not in the catalog via the ```add\_source``` or ```add\_point\_source``` methods.  Suppose the user is investigating a source not in the 4FGL catalog.  Previously, this would have involved opening the XML file in a text editor and adding the source by hand.  The user can now add a source with a PowerLaw spectral shape using the following code:
+Once the XML model has been created, it is possible to add additional sources not in the catalog via the ```add_source``` or ```add_point_source``` methods.  Suppose the user is investigating a source not in the 4FGL catalog.  Previously, this would have involved opening the XML file in a text editor and adding the source by hand.  The user can now add a source with a PowerLaw spectral shape using the following code:
 
 ```python
 #we will assume the source has RA = 123.45 and DEC = -12.345
@@ -80,7 +80,41 @@ Once the XML model has been created, it is possible to add additional sources no
 source_list.add_point_source(source_name='NewSource',RA=123.45,DEC=-12.345,new_model_name='new.xml')
 ```
 
-The code will use sensible default values for the spectral parameters, but it is likely the user may want to 
+The code will use sensible default values for the spectral parameters, but it is likely the user may want to adjust the parameters of 'NewSource' before running their likelihood analysis (this can be done via the BinnedAnalysis or UnbinnedAnalysis object so it doesn't necessarily take us back to a text editor).
+
+If the user wants a different spectral model, such as PLSuperExpCutoff4, they can specify ```spectrum_model='PLSuperExtCutoff4'``` in the ```add_point_source``` method call.  All spectral models described on the Fermi Science Support Center [model definitions page](https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html) are supported (a list of available models can be imported via ```from build_model.utilities import spectral_models```).  If the user doesn't want to use the defaults parameter values, they can instead supply a dictionary with parameter names and values as shown below:
+
+```python
+spectrum_info={'model':'PLSuperExpCutoff4',
+               'Prefactor':1e-9,'Prefactor_free':True,
+               'IndexS':1.8,'IndexS_free':True,
+               'Scale':1530,'Scale_free':False,
+               'ExpFactorS':5,'ExpFactorS_free':False,
+               'Index2':1,'Idex2_fre':False}
+
+source_list.add_point_source(source_name='NewSource',RA=123.45,DEC=-12.345,
+                              spectrum_model=spectrum_info,new_model_name='new.xml')
+```
+
+It is not necessary to specify all of the parameters in the dictionary, only those for which you know you don't want to use the default value and/or you know you don't want to use the default assumption of free or fixed.
+
+The ```add_point_source``` method itself calls the ```add_source``` method, handling passing in the spatial and spectral inforamtion for the user.  The user could call the ```add_source``` method with the same inputs as above, but would need to pass in the spectral info in a dictionary (even if they are only specifying the model name) and would need a dictionary for the spatial information with 'RA' and 'DEC' keys as well as a 'spatial\_model' key with a value of 'SkyDir'.
+
+To demonstrate the use of ```add_source```, let us assume the user wants to add a new extended source, using a radial Gaussian model (sigma of 0.2 degrees) and a log parabola spectral model with default parameters.  This would be accomplished as follows:
+
+```python
+spectrum_info={'model':'LogParabola'}
+
+spatial_info={'spatial_model':'RadialGaussian',
+              'RA':123.45,
+              'DEC':-12.345,
+              'Sigma':0.2}
+
+source_list.add_source(source_name='NewSource',spatial_info=spatial_info,
+                       spectrum_info=spectrum_info,diffuse=True,new_model_name='new.xml')
+```
+
+Note that we specify ```diffuse=True``` in the example above (the default is False, for a point source).  All spatial model types supported by the fermitools are implemented (a list of available models can be imported via ```from build_model.utilities import spatial_models```).
 
 ### Using the Command Line Interface
 The script can be called as an executable from the command line.  Note, you may need to make the script executable from the command line via ```chmod +x make4FGLxml.py```.  You'll need to add the repo to your PATH to be able to call it.  You can then invoke the script either on it's own:
