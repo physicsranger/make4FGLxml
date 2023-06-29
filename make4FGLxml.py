@@ -168,6 +168,7 @@ class SourceList:
         .reg file
         all parameters are optional with reasonable defaults and all parameters
         become attributes, with the same name, of the SourceList object
+        
         Parameters
         ----------
         galactic_file : str
@@ -492,44 +493,65 @@ class SourceList:
 
 
     def get_sources_xml(self):
+        '''
+        selects sources from a XML version of the 4FGL catalog
+        which satisfy the ROI and other requirements
+        '''
+
+        #read in the catalog
         catalog=minidom.parse(self.catalog_file)
         catalog_sources=np.array(catalog.getElementsByTagName('source'))
 
         #traverse through the sources once, just to get positional information
         right_ascensions,declinations=[],[]
         for source in catalog_sources:
+            #try to get information potentially from the 'header'
             try:
                 right_ascensions.append(float(source.getAttribute('RA')))
                 declinations.append(float(source.getAttribute('DEC')))
+
+            #if that doesn't work, access the spatialModel element directly
             except:
                 for parameter in source.getElementsByTagName('spatialModel')[0].getElementsByTagName('parameter'):
                     if parameter.getAttribute('name')=='RA':
                         right_ascensions.append(float(parameter.getAttribute('value')))
+
                     elif parameter.getAttribute('name')=='DEC':
                         declinations.append(float(parameter.getAttribute('value')))
 
+        #recast the lists as numpy arrays for use in
+        #angular separation function
         right_ascensions=np.array(right_ascensions)
         declinations=np.array(declinations)
-        
+
+        #get distance of each source from the ROI center
         self.source_distances=angular_separation(self.ROI[0],self.ROI[1],
                              right_ascensions,declinations)
 
+        #now we want to save time by only getting sources
+        #satisfying the ROI requirements
         source_mask=self.source_distances<=(self.ROI[2]+self.extra_radius)
         self.source_distances=self.source_distances[source_mask]
-        
+
+        #sort the distances in increasing order
         distance_index=self.source_distances.argsort()
         self.source_distances=self.source_distances[distance_index]
-        
+
+        #apply the masking and sorting to the catalog sources
+        #right ascensions, and declinations
         catalog_sources=catalog_sources[source_mask][distance_index]
         right_ascensions=right_ascensions[source_mask][distance_index]
         declinations=declinations[source_mask][distance_index]
 
         #now traverse the shorter list of sources to create the self.sources nested dictionary
         self.sources={}
+        
         for source,RA,DEC,distance in zip(catalog_sources,right_ascensions,declinations,self.source_distances):
+            #get the name and position info
             name=source.getAttribute('name')
             self.sources.update([(name,{'roi_distance':distance,'RA':RA,'DEC':DEC})])
 
+            #check if the source is extended or point-like
             if source.getAttribute('type')=='DiffuseSource':
                 self.sources[name].update([('Extended',not self.force_point_sources)])
             else:
@@ -549,19 +571,23 @@ class SourceList:
                 self.sources[name]['spectrum'].update([(parameter.getAttribute('name'),
                 float(parameter.getAttribute('value'))*float(parameter.getAttribute('scale')))])
             
-            #now for the spatial information
+            #now get the spatial information
             spatial=source.getElementsByTagName('spatialModel')
-            
+
+            #more involved for extended sources
             if self.sources[name]['Extended']:
                 self.sources[name].update([('spatial',
                     {'spatial_model':spatial[0].getAttribute('type')})])
+
                 if self.sources[name]['spatial'].get('spatial_model') in ['SpatialMap','MapCubeFunction']:
                     self.sources[name]['spatial'].update([('spatial_file',
                                         spatial[0].getAttribute('file').split('/')[-1])])
+
                 for parameter in spatial[0].getElementsByTagName('parameter'):
                     self.sources[name]['spatial'].update([(parameter.getAttribute('name'),
                     parameter.getAttribute('value'))])
-            
+
+            #easier for point sources
             else:
                 self.sources[name].update([('spatial',
                     {'spatial_model':'SkyDir','RA':RA,'DEC':DEC})])
@@ -569,13 +595,21 @@ class SourceList:
             
 
     def get_sources_fits(self):
+        '''
+        selects sources from a FITS version of the 4FGL catalog
+        which satisfy the ROI and other requirements
+        '''
+        
         #first, open the catalog FITS file and extract the information
         #we care about, putting the info into a couple of pandas dataframes
         #for ease of dealing with and searching through
         with pyfits.open(self.catalog_file) as catalog:
+            #we're interested in only two of the extensions
             source_info=catalog['LAT_Point_Source_Catalog'].data.field
             extended_info=catalog['ExtendedSources'].data.field
 
+            #access the necessary info for extended sources
+            #stripping extraneous white spaces when necessary
             extended_sources=pd.DataFrame(np.c_[[name.strip() for name in extended_info('Spatial_Filename')],
                                                 [function.strip() for function in extended_info('Spatial_Function')],
                                                 extended_info('Model_SemiMajor'),
@@ -583,7 +617,10 @@ class SourceList:
                                                 extended_info('DEJ2000')],
                                           columns=['file','function','extent','RA','DEC'],
                                           index=[name.strip() for name in extended_info('Source_Name')])
-            
+
+            #get the necessary information from the main catalog extension
+            #stripping extraneous white spaces when necessary
+            #and accounting for differences in DR versions
             catalog_sources=pd.DataFrame(np.c_[source_info('RAJ2000'),
                                                source_info('DEJ2000'),
                                                source_info('Signif_Avg'),
@@ -629,11 +666,12 @@ class SourceList:
         #and now sort the columns in order of ascending roi_distance
         catalog_sources.sort_values(by='roi_distance',ascending=True,inplace=True)
 
-        #to be consistent with the get_sources_xml method, save the distances
+        #save the distances and make the sources dictionary
         self.source_distances=catalog_sources.roi_distance.to_numpy(copy=True)
 
         self.sources={}
 
+        #cycle through the sources
         for source_name,row in catalog_sources.iterrows():
             #check if the source is extended or not, decide on name for source
             #and if it is extended
@@ -641,6 +679,7 @@ class SourceList:
                 name=source_name if self.extended_catalog_names else row.Extended_Name
                 self.sources.update([(name,{'roi_distance':row.roi_distance})])
                 self.sources[name].update([('Extended',not self.force_point_sources)])
+
             else:
                 name=source_name
                 self.sources.update([(name,{'roi_distance':row.roi_distance})])
@@ -679,6 +718,7 @@ class SourceList:
                          'Scale':row.Pivot_Energy,
                          'ExpfactorS':row.PLEC_Expfactor,
                          'Index2':row.PLEC_Index2})])
+
                 else:
                     #for PLSuperExpCutoff2, we need to modify the flux density value in the catalog
                     #do it here and not in the PLSuperExpCutoff2 Spectrum class function
@@ -695,14 +735,17 @@ class SourceList:
             if self.sources[name]['Extended']:
                 #do extended stuff
                 ext_row=extended_sources.loc[row.Extended_Name]
+
                 #if one of the 'Radial' models
                 if ext_row.function[:6]=='Radial':
                     self.sources[name].update([('spatial',
                         {'spatial_model':'RadialGaussian' if ext_row.function=='RadialGauss' else ext_row.function,
                          'RA':ext_row.RA,
                          'DEC':ext_row.DEC})])
+
                     if ext_row.function=='RadialDisk':
                         self.sources[name]['spatial'].update([('Radius',ext_row.extent)])
+
                     else:
                         self.sources[name]['spatial'].update([('Sigma',float(ext_row.extent)/(-2*np.log(0.32))**0.5)])
 
@@ -719,19 +762,42 @@ class SourceList:
                      'RA':row.RA,
                      'DEC':row.DEC})])
 
-    #function to add a non-4FGL source to the model
-    #will either overwrite
     def add_source(self,source_name,spatial_info,spectrum_info,
                    diffuse=False,new_model_name=None,overwrite=False):
+        '''
+        method to add a source, not in the 4FGL catalog, to an existing
+        XML model
+
+        Parameters
+        ----------
+        source_name : str
+            name to be given to source which will be added to
+            the XML model
+        spatial_info : dict
+            dictionary with necessary info to create a Spatial class object,
+            see build_model.model_components module for more details
+        spectrum_info : dict
+            dictionary with necessary info to create a Spectrum class object,
+            see build_model.model_components module for more details
+        diffuse : bool
+            flag to indicate if the source is extended (True) or
+            point-like (False)
+        new_model_name : str
+            file name for new XML model, if not specified the existing
+            model will be overwritten if the overwrite parameter is True
+        overwrite : bool
+            flag to overwrite existing file of same name
+        '''
+        
         #first, do a check on the model to make sure it exists
         if not os.path.exists(self.output_name):
             raise RuntimeError(f'{self.output_name} has not been created yet,\
  cannot use add_source until make_model has been successfully run.')
 
+        #assume the model is in the same directory as the
+        #existing model, add the full path information
         if new_model_name is not None:
             if os.path.dirname(new_model_name)=='':
-                #need to think about this, should we assume it is in the same directory
-                #or use the current working directory?
                 new_model_name=os.path.join(\
                     os.path.dirname(self.output_name),
                     new_model_name)
@@ -743,6 +809,8 @@ class SourceList:
                 else:
                     raise RuntimeError(f'File {new_model_name} exists but overwrite flag set to False.')
 
+        #if a name isn't provided, we will overwrite the existing
+        #file, but only if overwrite is True
         else:
             if overwrite:
                 new_model_name=self.output_name
@@ -762,7 +830,9 @@ class SourceList:
         if not valid_spectrum_input(spectrum_info):
             raise RuntimeError('Dictionary with spectrum info missing required\
  inputs or has invalid model selection.')
-        
+
+        #make the Spatial and Spectrum objects which
+        #create the necessary XML elements
         spatial=Spatial(**spatial_info)
         spectrum=Spectrum(**spectrum_info)
 
@@ -789,13 +859,15 @@ class SourceList:
         #add the source element to our new xml
         output_xml.documentElement.appendChild(source_out)
 
-        #now cycle
+        #now cycle through sources already in the model and
+        #add them to the new XML document
         current_model=minidom.parse(self.output_name)
         current_sources=np.array(current_model.getElementsByTagName('source'))
 
         for source in current_sources:
             output_xml.documentElement.appendChild(source)
 
+        #put it all in a string and write out
         out_string=filter(lambda s: len(s) and not s.isspace(),
                   output_xml.toprettyxml(' ').splitlines(True))
 
@@ -812,23 +884,74 @@ class SourceList:
     #spectrum_model can be the name of the model or a dictionary with
     #the necessary model info
     def add_point_source(self,source_name,RA,DEC,spectrum_model='PowerLaw',new_model_name=None,overwrite=False):
+        '''
+        method to add a point source, not in the 4FGL catalog,
+        to an existing XML model, this is a convenience method
+        which will, itself, call the add_source method
+
+        Parameters
+        ---------
+        source_name : str
+            name to be given to source which will be added to
+            the XML model
+        spectrum_model : str or dict
+            either the name of the spectral model for the source or a
+            dictionary with necessary info to create a Spectrum class object,
+            see build_model.model_components module for more details
+        new_model_name : str
+            file name for new XML model, if not specified the existing
+            model will be overwritten if the overwrite parameter is True
+        overwrite : bool
+            flag to overwrite existing file of same name
+        '''
+
+        #determine what type of spectrum_model input we have
         if isinstance(spectrum_model,dict):
             spectrum_info=spectrum_model
+
         else:
             spectrum_info={'model':spectrum_model}
-        
+
+        #call the add_source method
         self.add_source(source_name,
                         {'RA':RA,'DEC':DEC,'spatial_model':'SkyDir',
                          spectrum_info,diffuse=False,
                          new_model_name=new_model_name,overwrite=overwrite)
 
-#define a custom bool class so that command line arguments such as 'False' or 'True' will
-#evaluate correctly as opposed to always evaluating to True
 def mybool(Input):
-    return {'True':True,'False':False,'T':True,'F':False,'t':True,'f':False,'TRUE':True,'FALSE':False,"true":True,"false":False,"1":True,"0":False}.get(Input)
+    '''
+    function to take command line input meant for boolean
+    arguments and go from a set of possible strings
+    to the correct value so that every input doesn't
+    simply evaluate to True
+
+    Parameters
+    ----------
+    Input - str
+        input from command line, interpreted as a string
+
+    Returns
+    -------
+    bool
+        the corresponding True or False to Input
+    '''
+    
+    return {'True':True,'False':False,
+            'T':True,'F':False,
+            't':True,'f':False,
+            'TRUE':True,'FALSE':False,
+            "true":True,"false":False,
+            "1":True,"0":False}.get(Input)
 
 #function to be done when called from command line interface
 def cli():
+    '''
+    function to take command line input, create a SourceList object
+    and make a XML model using supplied ROI and requirements.  See
+    the helpString below and associated argument help strings for more
+    information (e.g., make4FGLxml.py --help)
+    '''
+    
     import argparse
     
     helpString="Creates an XML model from the 4FGL catalog (DR 1, 2, or 3) using FITS or XML catalog version\
@@ -837,6 +960,7 @@ def cli():
             sources with free parameters within the original extraction radius are chosen\
             based on nearness to center, significance, and variability."
     parser=argparse.ArgumentParser(description=helpString)
+    
     parser.add_argument("catalog",type=str,help="Path to catalog file to use, can be FITS or xml.")
     
     parser.add_argument("-ev","--event_file",type=str,default=None,help="Event file with ROI information in header.")

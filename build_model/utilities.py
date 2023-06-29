@@ -1,4 +1,5 @@
 import astropy.io.fits as pyfits
+
 import numpy as np
 
 #a list of the available spectral models
@@ -15,17 +16,33 @@ spectral_models=['PowerLaw','LogParabola','PLSuperExpCutoff4',
 spatial_models=['SkyDir','RadialDisk','RadialGaussian','SpatialMap',
                 'ConstantValue','MapCubeFunction']
 
-#function to extract the region of interest information from
-#a Fermi LAT event FITS file
 def get_ROI_from_event_file(event_file_name):
+    '''
+    function to extract the region of interest information
+    from a Fermi LAT event FITS file
+
+    Parameters
+    ----------
+    event_file_name : str or path-like object
+        name of the event file from which ROI information is desired
+        if the full path is not specified it must be in the current
+        directory
+
+    Returns
+    -------
+    list
+        list of floats corresponding to right ascension, declination,
+        and radius (all in degrees) from the event file header, or a
+        list of None-types if the information was not found in the header
+    '''
+    
     #open the file and get the DSKEY info from the header
     with pyfits.open(event_file_name) as event_file:
-        num=event_file[1].header['NDSKEYS']
         header=event_file[1].header
-        
-        dstypes={event_file[1].header[f'DSTYP{idx+1}']:\
-            event_file[1].header[f'DSVAL{idx+1}']\
-            for idx in range(event_file[1].header['NDSKEYS'])}
+        num=header['NDSKEYS']
+                
+        dstypes={header[f'DSTYP{idx+1}']: header[f'DSVAL{idx+1}']\
+            for idx in range(num)}
     
     #now attempt to get the position information and return
     try:
@@ -33,7 +50,8 @@ def get_ROI_from_event_file(event_file_name):
         return float(RA),float(DEC),float(radius)
     
     except KeyError:
-        print(f"No position keyword found in header of file {event_file_name} (assuming position is RA and DEC).")
+        print(f"No position keyword found in header of file {event_file_name}\
+ (assuming position is RA and DEC).")
         return None,None,None
 
 
@@ -41,6 +59,30 @@ def get_ROI_from_event_file(event_file_name):
 #on the sky and either single location on the sky or an array of sky locations
 #takes arguments in degrees, returns values in degrees
 def angular_separation(ref_RA,ref_DEC,RA_values,DEC_values):
+    '''
+    function to calculate the angular separation between a reference
+    position on the sky and either a different, single position
+    on the sky or an array of sky locations
+
+    Parameters
+    ----------
+    ref_RA - float
+        right ascension, in degrees, of the reference sky position
+    ref_DEC - float
+        declination, in degrees, of the reference sky position
+    RA_values - array or float
+        right ascension value(s) of comparison sky position(s)
+    DEC_values - array or float
+        declination value(s) of copmarison sky position(s)
+
+    Returns
+    -------
+    array
+        array of angular separations, in degrees, if
+        RA_values and DEC_values are single values then
+        a length 1 array is returned
+    '''
+    
     #for ease, create a degree-to-radians conversion variable
     d2r=np.pi/180
     
@@ -52,6 +94,20 @@ def angular_separation(ref_RA,ref_DEC,RA_values,DEC_values):
     
 #function to create a ds9 region file
 def build_region(region_file_name,sources):
+    '''
+    function to create a ds9-style .reg file from a dictionary
+    of sources
+
+    Parameters
+    ----------
+    region_file_name - str or path-like
+        name of output file, if not the full path then it will
+        be created in the current directory
+    sources - dict
+        nested dictionary of sources from a SourceList class object
+    '''
+    
+    
     #build a shape dictionary and a color list
     shape={'PLSuperExpCutoff':'cross','LogParabola':'diamond',
         'PowerLaw':'circle'}
@@ -80,6 +136,24 @@ def build_region(region_file_name,sources):
             region_file.write(entry)
 
 def valid_spatial_input(spatial_info):
+    '''
+    function to check if the input dict has valid parameter
+    names and all necessary parameters for a Spatial class object
+
+    Parameters
+    ----------
+    spatial_info - dict
+        dictionary with keys and values to create a
+        Spatial class object (see build_mode.model_components
+        module for more inforamtion)
+
+    Returns
+    -------
+    bool
+        True if all parameter names are valid and all necessary
+        parameters are specified, otherwise False
+    '''
+    
     #check if the model requested is valid
     model=spatial_info.get('spatial_model')
     valid_model=model in spatial_models
@@ -111,6 +185,24 @@ def valid_spatial_input(spatial_info):
     return valid_model and valid_pars
 
 def valid_spectrum_input(spectrum_info):
+    '''
+    function to check if the input dict has valid parameter
+    names and all necessary parameters for a Spectrum class object
+
+    Parameters
+    ----------
+    spatial_info - dict
+        dictionary with keys and values to create a
+        Spectrum class object (see build_mode.model_components
+        module for more inforamtion)
+
+    Returns
+    -------
+    bool
+        True if all parameter names are valid and all necessary
+        parameters are specified, otherwise False
+    '''
+    
     #check if the model requested is valid
     model=spectrum_info.get('model')
     valid_model=model in spectral_models
