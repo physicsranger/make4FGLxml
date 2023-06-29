@@ -141,24 +141,6 @@ class SourceList:
         print('Output file name: ',self.output_name)
         print(f'Selecting {self.ROI[2]:.1f} degrees around (ra,dec)=({self.ROI[0]:.3f},{self.ROI[1]:.3f})')
     
-    #make the xml file
-    #arguments are:
-    #galactic_file (str) -- optional, location and name of Galactic diffuse model to use
-    #galactic_name (str) -- optional, name of Galactic diffuse component to use in xml model
-    #isotropic_file (str) -- optional, location and name of Isotropic diffuse template to use
-    #isotropic_name (str) -- optional, name of Isotropic diffuse component to use in xml model
-    #norms_free_only (bool) -- optional, flag to only set normalizations parameters free
-    #extended_directory (str) -- optional, directory with extended source templates
-    #free_radius (float) -- optional, radius in degrees from center of ROI beyond which source parameters are fixed
-    #max_free_radius (float) -- optional, absolute maximum radius beyond which sources are fixed, this may be necessary when doing binned analysis and a variable source beyond free_radius would be set free but this source is beyond the boundaries of the square region used for the binned likelihood
-    #extra_radius (float) -- optional, radius beyond ROI radius in event file out to which sources will be included with fixed parameters, defaul tof 10 is good for analyses starting around 100 MeV, but for higher energy fits this can be decreased
-    #sigma_to_free (float) -- optional, average significance, using FITS catalog file, below which source parameters are fixed, even if within free_radius.  This corresponds to TS_value if using the XML catalog file.
-    #variable_free (float) -- optional, variability index above which source parameters are free, if beyond free_radius and/or below sigma_to_free only the normalization parameter is set free
-    #force_point_sources (bool) -- optional, flag to force extended sources to be point sources
-    #extended_catalog_names (bool) -- optional, flag to force use catalog names for extended sources (only matters if using catalog FITS file)
-    #make_region (bool) -- optional, flag to also generate ds9 region file
-    #galactic_index_free (bool) -- optional, the Galactic diffuse is given a power-law spectral shape but the by default the index is frozen, setting this flag to True allows that to be free for additional freedom in diffuse fit
-    #use_old_names (bool) -- optional, flag to use the naming convention from make1FGLxml.py and make2FGLxml.py with a leading underscore and no spaces
     def make_model(self,galactic_file="gll_iem_v07.fits",galactic_name='gll_iem_v07',
                isotropic_file="iso_P8R3_SOURCE_V3_v1.txt",isotropic_name='iso_P8R3_SOURCE_V3_v1',
                norms_free_only=False,extended_directory=None,free_radius=-1,max_free_radius=None,extra_radius=10,sigma_to_free=5,
@@ -188,10 +170,49 @@ class SourceList:
             full path to directory with extended soure templates
             if not provided will use fermitools install location
         free_radius : float
-            any sources greater than this radius, in degrees, from ROI
+            any sources further than this radius, in degrees, from ROI
             center will have all spectral parameters frozen to catalog
             values, unless they satisfy other requirements
-        
+        max_free_radius : float
+            any sources further than this radius, in degrees, from ROI
+            center will have all spectral parameters frozen to catalog
+            values, regardless of other requirements
+        extra_radius : float
+            additional radius, in degrees, beyond ROI radius within which
+            to include sources, with all parameters fixed, to account for
+            the size of the point-spread function at low energies
+        sigma_to_free : float
+            sources with average significance values in the 4FGL catalog, if
+            using the FITS version, will have all spectral parameters fixed
+            at catalog values, though variability information may set the
+            normalization parameters free.  if using the XML version of the
+            catalog, this values corresponds to test statistic value
+        variable_free : bool
+            flag to set spectral normalization parameters free for sources
+            which would otherwise be fixed if their variability index exceeds
+            the corresponding DR version threshold, does not apply to sources
+            outside the 'max_free_radius' boundary
+        force_point_sources : bool
+            flag to include extended sources, not including the Galactic and
+            isotropic diffuse components, as point sources in the output XML model
+        extended_catalog_names : bool
+            flag to use the catalog names (e.g., 4FGL J####.#+####e) instead of
+            association names for extended sources
+        make_region : bool
+            flag to make a ds9-style .reg file corresponding to the XML model,
+            with color indicating free or fixed spectral parameter(s) and
+            shape indicating spectral model
+        region_file : str
+            output name of ds9-style .reg file, if not supplied will construct
+            to match name of output XML model file, this is assumed to be in the
+            "write_directory", do not give the full path
+        galactic_index_free : bool
+            flag to modify the spectrum of the Galactic diffuse emission by a power law
+            with free Index parameter
+        use_old_names : bool
+            flag to use the old naming convention where spaces are removed and
+            an underscore is prepended to the source name (e.g., 4FGL J####.#+####
+            becomes _4FGLJ####.#+####)
         '''
 
         if os.path.dirname(galactic_file)=='':
@@ -209,41 +230,56 @@ class SourceList:
             #with different fermitools conda installs
             #else:
             #    isotropic_file=os.path.join(self.fermi_dir,'refdata','fermi','galdiffuse',isotropic_file)
-        
+
+        #create attributes associated with diffuse
+        #emission components
         self.galactic_file=galactic_file
         self.galactic_name=galactic_name
 
         self.isotropic_file=isotropic_file
         self.isotropic_name=isotropic_name
-        
+
+        #create attributes associated with radial boundaries
+        #and check values
         self.free_radius=(self.roi[2] if free_radius<=0 else free_radius)
         self.max_free_radius=(self.free_radius if max_free_radius is None else max_free_radius)
+        
         if self.max_free_radius<self.free_radius:
             warnings.warn(f'max_free_radius ({max_free_radius:.1f}) is < free_radius ({free_radius:.1f}), making the parameter useless.')
+
         self.extra_radius=extra_radius
 
+        #determine the extended source template directory to use
+        self.extended_directory=extended_directory if extended_directory is not None else\
+                    os.sep.join(['$(FERMI_DIR)','data','pyBurstAnalysisGUI','templates'])
+        
+        #create variables associated with boolean flags
+        #less to pass in to methods this way
+        #and can easily verify what was used
         self.variable_free=variable_free
         self.force_point_sources=force_point_sources
         self.extended_catalog_names=extended_catalog_names
         self.norms_free_only=norms_free_only
         self.use_old_names=use_old_names
-
-        self.extended_directory=extended_directory if extended_directory is not None else\
-                    os.sep.join(['$(FERMI_DIR)','data','pyBurstAnalysisGUI','templates'])
-        
         self.sigma_to_free=sigma_to_free
         self.make_region=make_region
         self.galactic_index_free=galactic_index_free
 
+        #make the XML model
         self.create_XML_model()
-        
+
+        #make the ds9-style .reg model, if requested
         if make_region:
+            #if name not specified, construct from output_name value
             if region_file is None or region_file=='':
                 region_file=os.path.basename(self.output_name).split('.')[:-1]
+                #allow that '.' might be in the name beyond just giving the extenstion
                 region_file=reduce(lambda s1,s2:s1+s2,region_file).join(['ROI_','.reg'])
-                
+
+            #construct the full path to the file
             self.region_file=os.path.join(self.write_directory,region_file)
-            
+
+            #and create the .reg file
             print('Building ds9-style region file',end='...')
             build_region(self.region_file,self.sources)
             print(f'done!\nFile saved as {self.region_file}.')
