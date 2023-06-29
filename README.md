@@ -127,6 +127,7 @@ source_list=SourceList(catalog_file='/some/path/to/gll_psc_v28.xml',[123.4,-12.3
                        write_directory='/some/path/to/analysis/directory')
 
 #in this case, we're assuming that 'my_LAT_model.xml' already exists
+#so we do not call make_model and jump straight to add_point_source
 
 source_list.add_point_source(source_name='NewSource',RA=123.45,DEC=-12.345,new_model_name='new.xml')
 ```
