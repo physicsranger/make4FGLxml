@@ -1,35 +1,128 @@
 from xml.dom import minidom
+
+from build_model.utilities import parameter_element
+
 import os
+
 import numpy as np
 
-#copied from Damien's macro
-#Create an XML document parameter description element
-def parameter_element(free,name,maximum,minimum,scale,value):
-    #get 'implementation'
-    impl=minidom.getDOMImplementation()
 
-    #make a 'document
-    xmldoc_out=impl.createDocument(None,None,None)
-
-    #create the element
-    parameter=xmldoc_out.createElement('parameter')
-
-    #set the element parameters
-    parameter.setAttribute('free',str(free))
-    parameter.setAttribute('name',str(name))
-    parameter.setAttribute('max',str(maximum))
-    parameter.setAttribute('min',str(minimum))
-    parameter.setAttribute('scale',str(scale))
-    parameter.setAttribute('value',str(value))
-    return parameter
 
 ###########################################################################################
-#class for the spectral models, will need a function for each model
-#currently, focus mainly on those models we'll run into in the catalog
-#only need to pass the spectrum attribute to the appendChild method of a source XML element
+#class for the spectral models
 ###########################################################################################
 class Spectrum:
+    '''
+    A class to create a spectrum XML document element to be added to a source
+    document element in a Fermi LAT XML region model
+
+    ...
+
+    Attributes
+    ----------
+    document : XML document
+        document instance containing the spectrum document element
+    functions : dict
+        dictionary with keys as spectral function names and
+        values pointing to the corresponding functions
+    model_name : str
+        name of spectrum function, e.g., PowerLaw
+    norm_par : str
+        name of spectral model normalization parameter
+    parameters : list
+        a list of dictionaries, with each dictionary containing
+        the necessary keys and values to create a parameter_element
+        (see build_model.utilities for more information)
+    spectrum : XML document element
+        document element corresponding to the spectrum model
+
+    Methods
+    -------
+    build()
+        build the spectrum document element, adding all of the
+        parameters in the parameters attribute
+    get_function_dictionary()
+        create the functions attribute as a dictionary of spectral model
+        functions
+    
+    <for descriptions of all spectral models referenced in the methods below
+    see https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html>
+    PowerLaw(Prefactor=1e-12,Scale=1000,Index=2,Prefactor_free=True,
+      Index_free=True,Scale_free=False,model=None)
+        create parameter dictionaries corresponding to the PowerLaw spectral model
+    LogParabola(self,norm=1e-9,alpha=1,beta=2,Eb=300,norm_free=True,
+      alpha_free=True,beta_free=True,Eb_free=False,model=None)
+        create parameter dictionaries corresponding to LogParabola spectral model
+    PLSuperExpCutoff4(self,Prefactor=1e-12,IndexS=2,Scale=1000,ExpfactorS=1,
+      Index2=1,Prefactor_free=True,IndexS_free=True,ExpfactorS_free=True,
+      Index2_free=False,Scale_free=False,model=None)
+        create parameter dictionaries corresponding to PLSuperExpCutoff4 spectral model
+    PLSuperExpCutoff2(self,Prefactor=1e-12,Index1=2,Scale=1000,Expfactor=1,
+      Index2=1,Prefactor_free=True,Index1_free=True,Expfactor_free=True,
+      Index2_free=False,Scale_free=False,model=None)
+        create parameter dictionaries corresponding to PLSuperExpCutoff2 spectral model
+    PowerLaw2(self,Integral=1e-8,Index=2,LowerLimit=100,UpperLimit=300000,
+      Integral_free=True,Index_free=True,model=None)
+        create parameter dictionaries corresponding to PowerLaw2 spectral model
+
+    BandFunction(self,norm=1e-9,alpha=1.8,beta=2.5,Ep=0.1,norm_free=True,
+      alpha_free=True,beta_free=True,Ep_free=True,model=None)
+        create parameter dictionaries corresponding to BandFunction spectral model
+    BPLExpCutoff(self,Prefactor=1e-12,Index1=1.8,Index2=2.3,BreakValue=1000,
+      Eabs=10,P1=100,Prefactor_free=True,Index1_free=True,Index2_free=False,
+      BreakValue_free=True,Eabs_free=True,P1_free=False,model=None)
+        create parameter dictionaries corresponding to BPLExpCutoff spectral model
+    BrokenPowerLaw(self,Prefactor=1e-12,Index1=1.8,BreakValue=1000,
+      Index2=2.3,Prefactor_free=True,Index1_free=True,BreakValue_free=False,
+      Index2_free=True,model=None)
+        create parameter dictionaries corresponding to the BrokenPowerLaw spectral model
+    BrokenPowerLaw2(self,Integral=1e-8,Index1=1.8,BreakValue=1000,Index2=2.3,
+      LowerLimit=100,UpperLimit=300000,Integral_free=True,Index1_free=True,
+      BreakValue_free=False,Index2_free=True,model=None)
+        create parameter dictionaries corresponding to BrokenPowerLaw2 spectral model
+    ConstantValue(self,Value=1,Value_free=True,model=None)
+        create parameter dictionaries corresponding to ConstantValue spectral model
+    DMFitFunction(self,
+      spectrum_file=os.path.join('$(FERMI_DIR)','refdata','fermi','Likelihood','gammamc_dif.dat'),
+      norm=5e20,sigmav=3e-26,mass=10,bratio=1,channel0=4,channel1=1,
+      norm_free=True,sigmav_free=True,mass_free=True,bratio_free=False,
+      channel0_free=False,channel1_free=False,model=None)
+        create parameter dictionaries corresponding to DMFitFunction spectral model
+    ExpCutoff(self,Prefactor=1e-12,Index=2,Scale=1000,Ebreak=1000,P1=100,P2=0,P3=0,
+      Prefactor_free=True,Index_free=True,Ebreak_free=True,P1_free=False,
+      P2_free=False,P3_free=False,Scale_free=False,model=None)
+        create parameter dictionaries corresponding to ExpCutoff spectral model
+    FileFunction(self,spectrum_file,Normalization=1,apply_edisp='false',
+      Normalization_free=True,model=None)
+        create parameter dictionaries corresponding to FileFunction spectral model
+    Gaussian(self,Prefactor=1e-9,Mean=7e4,Sigma=1e3,Prefactor_free=True,
+      Mean_free=True,Sigma_Free=True,model=None)
+        create parameter dictionaries corresponding to Gaussian spectral model
+    PLSuperExpCutoff(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,
+      Index2=1,Prefactor_free=True,Index1_free=True,Cutoff_free=True,
+      Index2_free=False,Scale_free=False,model=None)
+        create parameter dictionaries correspnding to PLSuperExpCutoff spectral model
+    PLSuperExpCutoff3(self,Prefactor=1e-12,IndexS=2,Scale=1000,Expfactor2=2,
+      Index2=1,Prefactor_free=True,IndexS_free=True,Expfactor2_free=True,
+      Index2_free=False,Scale_free=False,model=None)
+        create parameter dictionaries corresponding to PLSuperExpCutoff3 spectral model
+    SmoothBrokenPowerLaw(self,Prefactor=1e-12,Index1=1.8,Scale=100,BreakValue=1000,
+      Index2=2.3,Beta=0.2,Prefactor_free=True,Index1_free=True,Scale_free=False,
+      BreakValue_free=True,Index2_free=True,Beta_free=True,model=None)
+        create parameter dictionaries corresponding to SmoothBrokenPowerLaw spectral model
+    '''
+    
     def __init__(self,model,**kwargs):
+        '''
+        Parameters
+        ----------
+        model - str
+            name of spectral model
+        **kwargs - various
+            named arguments matching the arguments of function corresponding
+            to model, typically passed in as a dictionary
+        '''
+        
         self.document=minidom.getDOMImplementation().createDocument(None,None,None)
         self.spectrum=self.document.createElement('spectrum')
 
@@ -37,15 +130,26 @@ class Spectrum:
 
         self.parameters=self.functions[model](**kwargs)
 
-        self.model_name=model
-
     def build(self):
+        '''
+        construct XML spectrum document element
+        '''
+
+        #set basic spectrum attributes
         self.spectrum.setAttribute('type',self.model_name)
         self.spectrum.setAttribute('normPar',self.norm_par)
+
+        #cycle through parameter dictionaries
+        #adding elements to spectrum document element
         for parameter in self.parameters:
             self.spectrum.appendChild(parameter_element(**parameter))
 
     def get_function_dictionary(self):
+        '''
+        construct functions attribute as a dictionary
+        of available spectral model functions
+        '''
+        
         self.functions={'PowerLaw':self.PowerLaw,
                    'BrokenPowerLaw':self.BrokenPowerLaw,
                    'PowerLaw2':self.PowerLaw2,
@@ -66,17 +170,46 @@ class Spectrum:
                    
 
     def PowerLaw(self,Prefactor=1e-12,Scale=1000,Index=2,Prefactor_free=True,Index_free=True,Scale_free=False,model=None):
+        '''
+        create parameter dictionaries for PowerLaw spectral model and then
+        build spectrum document element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of Prefactor parameter, normalization in MeV**-1 cm**-2 s**-1
+        Scale - float
+            value of Scale parameter, scale energy in MeV
+        Index - float
+            value of Index parameter, spectral index using E**-(Index) convention
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        Index_free - bool
+            flag to set the Index parameter free
+        Scale_free - bool
+            flag to set the Scale parameter free, NOTE: it is not
+            recommended to set this to True
+        model - None-type
+            not used, included for **kwargs consistency
+        '''
+
+        #some checks on input values
         if Prefactor<0 or Scale<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor or Scale is negative or zero.")
-        
+
+        #massage the inputs a little and save
+        #parameters as attributes to be accesible later
+        #if ever desired
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.Index=abs(Index)
         self.Scale=Scale
 
+        #set descriptive attributes
         self.model_name='PowerLaw'
         self.norm_par='Prefactor'
-        
+
+        #make a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -86,23 +219,55 @@ class Spectrum:
         self.parameters.append({'free':int(Scale_free),'name':'Scale','minimum':min(100,self.Scale*0.9),
                            'maximum':max(500000,self.Scale*1.5),'scale':1,'value':self.Scale})
 
+        #now build the spectrum document element
         self.build()
 
     def BrokenPowerLaw(self,Prefactor=1e-12,Index1=1.8,BreakValue=1000,Index2=2.3,
                        Prefactor_free=True,Index1_free=True,BreakValue_free=False,
                        Index2_free=True,model=None):
+        '''
+        create parameter dictionaries for BrokenPowerLaw spectral model and then
+        build spectrum document element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of Prefactor parameter, normalization in MeV**-1 cm**-2 s**-1
+        Index1 - float
+            value of Index1 parameter, low-energy spectral index using E**-(Index1) convention
+        Breakvalue - float
+            value of BreakValue parameter, energy in MeV of spectral break
+        Index2 - float
+            value of Index2 parameter, high-energy spectral index using E**-(Index2) convention
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        Index1_free - bool
+            flag to set the Index1 parameter free
+        BreakValue_free - bool
+            flag to set the BreakValue parameter free
+        Index2_free - bool
+            flag to set the Index2 parameter free
+        model - None-type
+            not used, included for **kwargs consistency
+        '''
+
+        #do some sanity checks on the input values
         if Prefactor<0 or BreakValue<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor or BreakValue is negative or zero.")
-        
+
+        #massage the input values a bit
+        #and make accessible for later
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.Index1=abs(Index1)
         self.BreakValue=BreakValue
         self.Index2=abs(Index2)
 
+        #set descriptive attributes
         self.model_name='BrokenPowerLaw'
         self.norm_par='Prefactor'
-        
+
+        #make a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -116,52 +281,132 @@ class Spectrum:
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,
                      'maximum':10,'scale':-1,'value':self.Index2})
 
+        #now build the spectrum document element
         self.build()
 
     def PowerLaw2(self,Integral=1e-8,Index=2,LowerLimit=100,UpperLimit=300000,
-                  Integral_free=True,Index_free=True,model=None):
+                  Integral_free=True,Index_free=True,LowerLimit_free=False,
+                  UpperLimit_free=False,model=None):
+        '''
+        create parameter dictionaries for PowerLaw2 spectral model and then
+        build spectrum document element
+
+        Parameters
+        ----------
+        Integral - float
+            value of Integral parameter, integral flux (from LowerLimit to
+            UpperLimit) in units of cm**-2 s**-1
+        Index - float
+            value of Index parameter, spectral index using E**-(Index) convention
+        LowerLimit - float
+            value of LowerLimit parameter, lower energy value, in MeV, of the
+            flux integral
+        UpperLimit - float
+            value of UpperLimit parameter, upper energy value, in MeV, of the
+            flux integral
+        Integral_free - bool
+            flag to set the Integral parameter free
+        Index_free - bool
+            flag to set the Index parameter free
+        LowerLimit_free - bool
+            flag to set the LowerLimit parameter free, NOTE: it is not
+            recommended to set this flag to True
+        UpperLimit_free - bool
+            flag to set the UpperLimit parameter free, NOTE: it is not
+            recommended to set this flag to True
+        model - None-type
+            not used, included for **kwargs consistency
+        '''
+        
         #some checks on the inputs
         if Integral<0 or LowerLimit<=0 or UpperLimit<=0:
             raise ValueError("Input parameters invalid, at least one of Integral, LowerLimit, or UpperLimit is negative or zero.")
         
         if LowerLimit>=UpperLimit:
             raise ValueError(f"Requested LowerLimit of {LowerLimit:,} is >= UpperLimit of {UpperLimit:,}.")
-        
+
+        #massage the inputs a bit and make accessible
+        #for later use, if desired
         self.Integral_scale=10**np.floor(np.log10(Integral))
         self.Integral=Integral/self.Integral_scale
         self.Index=abs(Index)
         self.LowerLimit=LowerLimit
         self.UpperLimit=UpperLimit
 
+        #assign descriptive attributes
         self.model_name='PowerLaw2'
         self.norm_par='Integral'
 
+        #create dictionary for each parameter
         self.parameters=[{'free':int(Integral_free),'name':'Integral','minimum':0,
                      'maximum':1e6,'scale':self.Integral_scale,'value':self.Integral}]
 
         self.parameters.append({'free':int(Index_free),'name':'Index','minimum':0,
                      'maximum':10,'scale':-1,'value':self.Index})
 
-        self.parameters.append({'free':0,'name':'LowerLimit','minimum':10,
+        self.parameters.append({'free':int(LowerLimit_free),'name':'LowerLimit','minimum':10,
                            'maximum':max(500000,self.LowerLimit*1.5),
                            'scale':1,'value':self.LowerLimit})
 
-        self.parameters.append({'free':0,'name':'UpperLimit','minimum':10,
+        self.parameters.append({'free':int(UpperLimit_free),'name':'UpperLimit','minimum':10,
                            'maximum':max(500000,self.UpperLimit*1.5),
                            'scale':1,'value':self.UpperLimit})
 
+        #now buld the spectrum document element
         self.build()
 
     def BrokenPowerLaw2(self,Integral=1e-8,Index1=1.8,BreakValue=1000,Index2=2.3,
                        LowerLimit=100,UpperLimit=300000,Integral_free=True,Index1_free=True,
-                       BreakValue_free=False,Index2_free=True,model=None):
+                       BreakValue_free=False,Index2_free=True,LowerLimit_free=False,
+                       UpperLimit_free=False,model=None):
+        '''
+        create parameter dictionaries for BrokenPowerLaw2 spectral model and then
+        build spectrum document element
+
+        Parameters
+        ----------
+        Integral - float
+            value of Integral parameter, integrated flux, from LowerLimit
+            to UpperLimit, in units of cm**-2 s**-1
+        Index1 - float
+            value of Index1 parameter, low-energy spectral index using E**-(Index1) convention
+        BreakValue - float
+            value of the BreakValue parameter, energy in MeV of spectral break
+        Index2 - float
+            value of Index2 parameter, high-energy spectral index using E**-(Index2) convention
+        LowerLimit - float
+            value of LowerLimit parameter, low energy value, in MeV, of the
+            flux integral
+        UpperLimit - float
+            value of UpperLimit parameter, upper energy value, in MeV, of the
+            flux integral
+        Integral_free - bool
+            flag to set the Integral parameter free
+        Index1_free - bool
+            flag to set the Index1 parameter free
+        BreakValue_free - bool
+            flag to set the BreakValue parameter free
+        Index2_free - bool
+            flag to set the Index2 parameter free
+        LowerLimit_free - bool
+            flag to set the LowerLimit parameter free, NOTE: it is not
+            recommended to set this flag to True
+        UpperLimit_free - bool
+            flag to set the UpperLimit parameter free, NOTE: it is not
+            recommended to set this flag to True
+        model - None-type
+            not used, included for **kwargs consistency
+        '''
+        
         #some checks on the inputs
         if Integral<0 or LowerLimit<=0 or UpperLimit<=0 or BreakValue<=0:
             raise ValueError("Input parameters invalid, at least one of Integral, LowerLimit, UpperLimit, or BreakValue is negative or zero.")
         
         if LowerLimit>=UpperLimit:
             raise ValueError(f"Requested LowerLimit of {LowerLimit:,} is >= UpperLimit of {UpperLimit:,}.")
-        
+
+        #massage the inputs a little and make
+        #them accessible later, if desired
         self.Integral_scale=10**np.floor(np.log10(Integral))
         self.Integral=Integral/self.Integral_scale
         self.Index1=abs(Index1)
@@ -170,9 +415,11 @@ class Spectrum:
         self.LowerLimit=LowerLimit
         self.UpperLimit=UpperLimit
 
+        #set some descriptive attributes
         self.model_name='BrokenPowerLaw2'
         self.norm_par='Integral'
 
+        #create dictionary for each parameter
         self.parameters=[{'free':int(Integral_free),'name':'Integral','minimum':0,
                      'maximum':1e6,'scale':self.Integral_scale,'value':self.Integral}]
 
@@ -186,23 +433,61 @@ class Spectrum:
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,
                      'maximum':10,'scale':-1,'value':self.Index2})
 
-        self.parameters.append({'free':0,'name':'LowerLimit','minimum':10,
+        self.parameters.append({'free':int(LowerLimit_free),'name':'LowerLimit','minimum':10,
                            'maximum':max(500000,self.LowerLimit*1.5),
                            'scale':1,'value':self.LowerLimit})
 
-        self.parameters.append({'free':0,'name':'UpperLimit','minimum':10,
+        self.parameters.append({'free':int(UpperLimit_free),'name':'UpperLimit','minimum':10,
                            'maximum':max(500000,self.UpperLimit*1.5),
                            'scale':1,'value':self.UpperLimit})
 
+        #now build the spectrum document element
         self.build()
 
     def SmoothBrokenPowerLaw(self,Prefactor=1e-12,Index1=1.8,Scale=100,BreakValue=1000,
                              Index2=2.3,Beta=0.2,Prefactor_free=True,Index1_free=True,
                              Scale_free=False,BreakValue_free=True,Index2_free=True,
                              Beta_free=True,model=None):
+        '''
+        create parameter dictionaries for SmoothBrokenPowerLaw model and then
+        build spectrum document element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of Prefactor parameter, normalization in MeV**-1 cm**-2 s**-1
+        Index1 - float
+            value of Index1 parameter, low-energy spectral index using E**-(Index1) convention
+        Scale - float
+            value of Scale parameter, scale energy in MeV
+        BreakValue - float
+            value of BreakValue parameter, spectral break energy in MeV
+        Index2 - float
+            value of Index2 parameter, high_energy spectral index using E**-(Index2) convention
+        Beta - float
+            value of Beta parameter
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        Index1_free - bool
+            flag to set the Index1 parameter free
+        Scale_free - bool
+            flag to set the Scale parameter free, NOTE: it is not
+            recommended to set this flag to True
+        BreakValue_free - bool
+            flag to set the BreakValue parameter free
+        Index2_free - bool
+            flag to set the Index2 parameter free
+        Beta_free - bool
+            flag to set the Beta parameter free
+        '''
+        
+
+        #do some sanity checks on inputs
         if Prefactor<0 or BreakValue<=0 or Scale<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, BreakValue, or Scale is negative or zero.")
-        
+
+        #massage the inputs a bit and make
+        #them accessible later if desired
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.Scale=Scale
@@ -211,9 +496,11 @@ class Spectrum:
         self.Index2=abs(Index2)
         self.Beta=Beta
 
+        #set some descriptive attributes
         self.model_name='SmoothBrokenPowerLaw'
         self.norm_par='Prefactor'
-        
+
+        #create a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -233,6 +520,7 @@ class Spectrum:
         self.parameters.append({'free':int(Beta_free),'name':'Beta','minimum':0.01,
                      'maximum':10,'scale':1,'value':self.Beta})
 
+        #now build the spectrum document element
         self.build()
 
     def ExpCutoff(self,Prefactor=1e-12,Index=2,Scale=1000,Ebreak=1000,
