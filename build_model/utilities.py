@@ -2,6 +2,8 @@ import astropy.io.fits as pyfits
 
 import numpy as np
 
+from xml.dom import minidom
+
 #a list of the available spectral models
 #note, this includes all listed on the FSSC
 #but the more common models are 'up front'
@@ -15,6 +17,62 @@ spectral_models=['PowerLaw','LogParabola','PLSuperExpCutoff4',
 #a list of available spatial models
 spatial_models=['SkyDir','RadialDisk','RadialGaussian','SpatialMap',
                 'ConstantValue','MapCubeFunction']
+
+#copied from Damien's macro
+#Create an XML document parameter description element
+def parameter_element(free,name,maximum,minimum,scale,value):
+    '''
+    function to create a XML parameter element for a spatialModel
+    our spectrum element of a LAT XML model
+    
+    this function represents slight modifications of
+    a function written by Damien Parent while at NRL
+
+    all parameters must eventually be converted to strings, so
+    there is flexibility in how they are input
+
+    Parameters
+    ----------
+    free - int or str
+        flag to indicate if parameter should be left free to vary, 1 = True
+        and 0 = False
+    name - str
+        name of parameter
+    maximum - float or str
+        maximum value parameter can take
+    minimum - float or str
+        minimum value parameter can take
+    scale - float or str
+        scale of parameter, parameter is evaluated as
+        scale * value
+    value - float or str
+        value of parameter, after accounting for scale parameter
+
+    Returns
+    -------
+    XML document element
+        XML document representation of the parameter, to be added
+        to a spatialModel or spectrum document element
+    '''
+    
+    #get 'implementation'
+    impl=minidom.getDOMImplementation()
+
+    #make a 'document
+    xmldoc_out=impl.createDocument(None,None,None)
+
+    #create the element
+    parameter=xmldoc_out.createElement('parameter')
+
+    #set the element parameters
+    parameter.setAttribute('free',str(free))
+    parameter.setAttribute('name',str(name))
+    parameter.setAttribute('max',str(maximum))
+    parameter.setAttribute('min',str(minimum))
+    parameter.setAttribute('scale',str(scale))
+    parameter.setAttribute('value',str(value))
+    
+    return parameter
 
 def get_ROI_from_event_file(event_file_name):
     '''
