@@ -9,20 +9,96 @@ from build_model.utilities import (
 
 from build_model.model_components import Spectrum,Spatial
 
-import os,warnings
+import os
+
+import warnings
+
 import numpy as np
+
 import pandas as pd
+
 from functools import reduce
+
 import astropy.io.fits as pyfits
+
 from xml.dom import minidom
 
 class SourceList:
-    #arguments are:
-    #catalog_file (string, filename of LAT source list fits file in catalog format)
-    #ROI (either a list with [RA,DEC,radius] or string with name of event file to extract ROI info from)
-    #output_name (string, name of output xml file, defaults to my_model.xml)
-    #DR (int, data release version, default is 3)
+    '''
+    A class used to create a spatial and spectral XML source model for
+    analysis of LAT data using the 4FGL catalog (data release versions 1, 2, or 3)
+
+    ...
+
+    Attributes
+    ----------
+    catalog_file : str
+        path to 4FGL catalog file, FITS or XML format
+    output_name : str
+        path for output XML model file
+    write_directory : str
+        path for directory file will be saved in
+    DR : int
+        4FGL data release version of input catalog_file
+    variability_threshold: float
+        value to compare the variability index of a source when
+        determining if it should be considered variable or not,
+        depends on data release version
+    ROI : list
+        region of interest information for the model
+        [right ascension, declination, radius]
+
+    Methods
+    -------
+    add_point_source(source_name,RA,DEC,spectrum_model='PowerLaw',new_model_name=None,overwrite=False)
+        adds a point source, not in 4FGL, at the given position
+        to the XML model created via the make_model method
+    add_source(source_name,spatial_info,spectrum_info,diffuse=False,new_model_name=None,overwrite=False)
+        add a new source, not in 4FGL, with spatial and spectral information
+        specified via input dictionaries, to an XML model created
+        via the make_model method
+    build_model()
+        creates the spatial-spectral model, after sources have been
+        selected from the 4FGL catalog, and saves the output XML file
+    create_XML_model()
+        calls methods to select sources from the 4FGL catalog to be included
+        in the model and then calls a method to build the model
+    get_sources_fits()
+        selects sources from a FITS format version of the 4FGL catalog
+    get_sources_xml()
+        selects sources from a XML format version of the 4FGL catalog
+    make_model(galactic_file="gll_iem_v07.fits",galactic_name='gll_iem_v07',
+               isotropic_file="iso_P8R3_SOURCE_V3_v1.txt",isotropic_name='iso_P8R3_SOURCE_V3_v1',
+               norms_free_only=False,extended_directory=None,free_radius=-1,max_free_radius=None,extra_radius=10,sigma_to_free=5,
+               variable_free=True,force_point_sources=False,extended_catalog_names=False,make_region=True,region_file=None,
+               galactic_index_free=True,use_old_names=False)
+        checks inputs, calls methods to select sources and make the XML model,
+        and makes a ds9-styel .reg file from the selected sources (if requested)
+    Print()
+        prints to screen details of the inputs (catalog, ROI)
+        and outputs (file name and write directory)
+    '''    
+
     def __init__(self,catalog_file,ROI,output_name='my_model.xml',DR=3,write_directory=''):
+        '''
+        Parameters
+        ----------
+        catalog: str
+            path to FITS or XML version of 4FGL catalog
+        ROI: list or str
+            region of interest information as either a list [RA,DEC,radius]
+            or the path to a Fermi LAT event file with the desired
+            ROI selection in the header
+        output_name: str
+            desired file name of the output XML model, note that this
+            should not be the full path
+        DR: int
+            data release version of the 4FGL catalog corresponding
+            to the passed "catalog" parameter
+        write_directory: str
+            path to directory in which to save "output_name", if not specified
+            will default to the current directory
+        '''
         #some sanity checks on input values
         if not os.path.exists(catalog_file):
             raise FileNotFoundError(2,'Could not access catalog file',catalog_file)
@@ -39,18 +115,28 @@ class SourceList:
         self.write_directory=write_directory
         self.DR=DR
         self.variability_threshold=24.725 if DR==3 else 21.666 if DR==1 else 18.475
-        self.fermi_dir=os.getenv('FERMI_DIR')
+        #self.fermi_dir=os.getenv('FERMI_DIR')
 
+        #get the region of inerest information
+        #either directly from a list passed in
         if isinstance(ROI,list):
             self.ROI=ROI
-            
+
+        #or from the header of an eventfile
+        #passed in
         elif os.path.exists(ROI):
             self.ROI=get_ROI_from_event_file(ROI)
+
+        #may need to rethink the way this else
+        #statement is handled
         else:
             raise FileNotFoundError(2,'Could not access event file',ROI)
     
-    #define a quick print function to make sure everything looks right
+    
     def Print(self):
+        '''
+        print the inputs and desired output
+        '''
         print('Catalog file: ',self.catalog_file)
         print('Output file name: ',self.output_name)
         print(f'Selecting {self.ROI[2]:.1f} degrees around (ra,dec)=({self.ROI[0]:.3f},{self.ROI[1]:.3f})')
@@ -78,6 +164,35 @@ class SourceList:
                norms_free_only=False,extended_directory=None,free_radius=-1,max_free_radius=None,extra_radius=10,sigma_to_free=5,
                variable_free=True,force_point_sources=False,extended_catalog_names=False,make_region=True,region_file=None,
                galactic_index_free=True,use_old_names=False):
+        '''
+        select sources from the 4FGL catalog (based on specified thresholds
+        and logic), build and save an XML model, and optionally create a ds9-style
+        .reg file
+        all parameters are optional with reasonable defaults
+        Parameters
+        ----------
+        galactic_file : str
+            name of Galactic diffuse model file name, if full path is not
+            specified will default to fermitools install location
+        galactic_name : str
+            name for Galactic diffuse component in XML model
+        isotropic_file : str
+            name of isotropic diffuse template file name, if full path is
+            not specified will default to fermitools install lcoation
+        isogtropic_name : str
+            name for isotropic diffuse emission component in XML model
+        norms_free_only : bool
+            flag to only set spectral normalization parameters free to vary
+            for any sources satisfying other requirements to be free
+        extended_directory : str
+            full path to directory with extended soure templates
+            if not provided will use fermitools install location
+        free_radius : float
+            any sources greater than this radius, in degrees, from ROI
+            center will have all spectral parameters frozen to catalog
+            values, unless they satisfy other requirements
+        
+        '''
 
         if os.path.dirname(galactic_file)=='':
             #if self.fermi_dir is None:
