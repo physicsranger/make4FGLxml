@@ -612,6 +612,21 @@ class SourceList:
         self.output_name=new_model_name
         print('SourceList object attribute "output_name" now points to new file')
 
+    #a convenience method to add a point source easily
+    #will call the add_source method
+    #spectrum_model can be the name of the model or a dictionary with
+    #the necessary model info
+    def add_point_source(self,source_name,RA,DEC,spectrum_model='PowerLaw',new_model_name=None,overwrite=False):
+        if isinstance(spectrum_model,dict):
+            spectrum_info=spectrum_model
+        else:
+            spectrum_info={'model':spectrum_model}
+        
+        self.add_source(source_name,
+                        {'RA':RA,'DEC':DEC,'spatial_model':'SkyDir',
+                         spectrum_info,diffuse=False,
+                         new_model_name=new_model_name,overwrite=overwrite)
+
 #define a custom bool class so that command line arguments such as 'False' or 'True' will
 #evaluate correctly as opposed to always evaluating to True
 def mybool(Input):
