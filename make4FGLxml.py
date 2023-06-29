@@ -32,6 +32,7 @@ class SourceList:
 
     Attributes
     ----------
+    <initial>
     catalog_file : str
         path to 4FGL catalog file, FITS or XML format
     output_name : str
@@ -47,6 +48,19 @@ class SourceList:
     ROI : list
         region of interest information for the model
         [right ascension, declination, radius]
+    <subsequent>
+    sources : dict
+        dictionary of sources, keys are source names, selected
+        from the 4FGL catalog which satisfy ROI and other requirements,
+        will not exist until after the make_model method has
+        been called
+    num_extended : int
+        number of extended sources added to the model, will not
+        exist until after make_model method has been called and
+        does not include diffuse emission components
+    num_point : int
+        number of point sources added to the model, will not
+        exist until after make_model method has been called
 
     Methods
     -------
@@ -99,6 +113,7 @@ class SourceList:
             path to directory in which to save "output_name", if not specified
             will default to the current directory
         '''
+        
         #some sanity checks on input values
         if not os.path.exists(catalog_file):
             raise FileNotFoundError(2,'Could not access catalog file',catalog_file)
@@ -137,6 +152,7 @@ class SourceList:
         '''
         print the inputs and desired output
         '''
+        
         print('Catalog file: ',self.catalog_file)
         print('Output file name: ',self.output_name)
         print(f'Selecting {self.ROI[2]:.1f} degrees around (ra,dec)=({self.ROI[0]:.3f},{self.ROI[1]:.3f})')
@@ -150,7 +166,8 @@ class SourceList:
         select sources from the 4FGL catalog (based on specified thresholds
         and logic), build and save an XML model, and optionally create a ds9-style
         .reg file
-        all parameters are optional with reasonable defaults
+        all parameters are optional with reasonable defaults and all parameters
+        become attributes, with the same name, of the SourceList object
         Parameters
         ----------
         galactic_file : str
@@ -285,6 +302,13 @@ class SourceList:
             print(f'done!\nFile saved as {self.region_file}.')
     
     def create_XML_model(self):
+        '''
+        based on the value of output-name, calls either the get_sources_xml
+        or get_sources fits method to select sources from the 4FGL catalog
+        matching the ROI and other constraints and then calls the build_model
+        method to create the XML model file
+        '''
+        
         print(f'Creating spatial and spectral model from the 4FGL DR-{self.DR} catalog: {self.catalog_file}.')
         
         if os.path.basename(self.catalog_file).split('.')[-1].lower()=='xml':
@@ -296,17 +320,31 @@ class SourceList:
         self.build_model()
 
     def build_model(self):
-        #keep track of point and extended sources, similar to before
+        '''
+        function to construct a spatial-spectral XML region model from
+        the sources attribute of the SourceList object (requires get_sources_fits
+        or get_sources_xml method to have been called first) also adds the
+        isotropic and Galactic diffuse emission components
+        '''
+        
+        #keep track of point and extended sources
         self.num_extended=0
         self.num_point=0
+
         #use the self.sources nested dictionary to create the output xml file
         output_xml=minidom.getDOMImplementation().createDocument(None,'source_library',None)
         output_xml.documentElement.setAttribute('title','source library')
+
         for source_name in self.sources.keys():
+            #create a new 'source' element
             source_out=output_xml.createElement('source')
+
+            #set basic attributes of the element
             source_out.setAttribute('name','_'+reduce(lambda s1,s2:s1+s2,source_name.split(' ')) if self.use_old_names else source_name)
             source_out.setAttribute('ROI_Center_Distance',f"{self.sources[source_name]['roi_distance']:.2f}")
             source_out.setAttribute('type','DiffuseSource' if self.sources[source_name]['Extended'] else 'PointSource')
+
+            
             if self.sources[source_name]['Extended']:
                 self.num_extended+=1
             else:
@@ -392,7 +430,8 @@ class SourceList:
 
             #now that we have added flags for spectral parameters to be free or fixed
             #and possibly adjusted extended source file paths
-            #let's create the spectrum and spatialModel elements
+            #let's create the Spectrum and Spatial objects (which will add
+            #spectrum and spatialModel elements to the source element
             #and then add them to the source and add that to the larger XML document
             spectrum=Spectrum(**self.sources[source_name]['spectrum'])
             source_out.appendChild(spectrum.spectrum)
@@ -431,20 +470,25 @@ class SourceList:
         
         output_xml.documentElement.appendChild(Isotropic)
 
+        #put all of this in a string and write to output file
         out_string=filter(lambda s: len(s) and not s.isspace(),
                   output_xml.toprettyxml(' ').splitlines(True))
 
         with open(self.output_name,'w') as output_file:
             output_file.write(''.join(out_string))
+
+        #print information about the model for the user
         if self.force_point_sources:
-            print(f'Added {self.num_point} point sources, note that any extended sources',end=' ')
-            print(f'(except diffuse components) have been modeled as point sources.')
+            print(f'Added {self.num_point} point sources, note that any extended sources\
+ (except diffuse components) have been modeled as point sources.')
+
         else:
             print(f'Added {self.num_point} point sources and {self.num_extended} extended sources.')
+
             if self.num_extended>0:
-                print('If you plan to analyze LAT data with unbinned likelihood,',end=' ')
-                print('you will need to run gtdiffrsp for the extended sources',end=' ')
-                print('or rerun makeModel with force_point_sources set to True.')
+                print('If you plan to analyze LAT data with unbinned likelihood,\
+ you will need to run gtdiffrsp for the extended sources or rerun makeModel\
+ with force_point_sources set to True.')
 
 
     def get_sources_xml(self):
