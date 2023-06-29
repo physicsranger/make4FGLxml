@@ -113,7 +113,7 @@ def valid_spatial_input(spatial_info):
 def valid_spectrum_input(spectrum_info):
     #check if the model requested is valid
     model=spectrum_info.get('model')
-    valid_model=mode in spectral_models
+    valid_model=model in spectral_models
 
     #check if necessary parameters are specified
     if model=='FileFunction':
