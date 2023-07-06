@@ -189,8 +189,8 @@ class Spectrum:
         Scale_free - bool
             flag to set the Scale parameter free, NOTE: it is not
             recommended to set this to True
-        model - None-type
-            not used, included for **kwargs consistency
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
         '''
 
         #some checks on input values
@@ -247,8 +247,8 @@ class Spectrum:
             flag to set the BreakValue parameter free
         Index2_free - bool
             flag to set the Index2 parameter free
-        model - None-type
-            not used, included for **kwargs consistency
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
         '''
 
         #do some sanity checks on the input values
@@ -314,8 +314,8 @@ class Spectrum:
         UpperLimit_free - bool
             flag to set the UpperLimit parameter free, NOTE: it is not
             recommended to set this flag to True
-        model - None-type
-            not used, included for **kwargs consistency
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
         '''
         
         #some checks on the inputs
@@ -394,8 +394,8 @@ class Spectrum:
         UpperLimit_free - bool
             flag to set the UpperLimit parameter free, NOTE: it is not
             recommended to set this flag to True
-        model - None-type
-            not used, included for **kwargs consistency
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
         '''
         
         #some checks on the inputs
@@ -479,6 +479,8 @@ class Spectrum:
             flag to set the Index2 parameter free
         Beta_free - bool
             flag to set the Beta parameter free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
         '''
         
 
@@ -527,10 +529,52 @@ class Spectrum:
                   P1=100,P2=0,P3=0,Prefactor_free=True,Index_free=True,
                   Ebreak_free=True,P1_free=False,P2_free=False,P3_free=False,
                   Scale_free=False,model=None):
+
+        '''
+        create parameter dictionaries for ExpCutoff model and then
+        build spectrum document element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of Prefactor parameter, normalization in MeV**-1 cm**-2 s**-1
+        Index - float
+            value of Index parameter, low-energy spectral index using E**-(Index) convention
+        Scale - float
+            value of Scale parameter, scale energy in MeV
+        Ebreak - float
+            value of Ebreak parameter, spectral break energy in MeV
+        P1 - float
+            value of the P1 parameter
+        P2 - float
+            value of the P2 parameter
+        P3 - float
+            value of the P3 parameter
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        Index_free - bool
+            flag to set the Index parameter free
+        Scale_free - bool
+            flag to set the Scale parameter free, NOTE: it is not
+            recommended to set this flag to True
+        EbreakV_free - bool
+            flag to set the BreakValue parameter free
+        P1_free - bool
+            flag to set the P1 parameter free
+        P2_free - bool
+            flag to set the P2 parameter free
+        P3_free - bool
+            flag to set the P3 parameter free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+        
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Ebreak<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Ebreak is negative or zero.")
-        
+
+        #massage the inputs a bit and then make them
+        #accessible later, if desired
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.Index=abs(Index)
@@ -540,9 +584,11 @@ class Spectrum:
         self.P2=P2
         self.P3=P3
 
+        #set more attributes
         self.model_name='ExpCutoff'
         self.norm_par='Prefactor'
 
+        #create a dictionary for each parameters
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -566,15 +612,52 @@ class Spectrum:
         self.parameters.append({'free':int(P3_free),'name':'P3','minimum':-1,'maximum':1,
                      'scale':1,value:self.P3})
 
+        #now build the spectrum document element
         self.build()
 
     def BPLExpCutoff(self,Prefactor=1e-12,Index1=1.8,Index2=2.3,BreakValue=1000,
                   Eabs=10,P1=100,Prefactor_free=True,Index1_free=True,Index2_free=False,
                   BreakValue_free=True,Eabs_free=True,P1_free=False,model=None):
+        '''
+        create parameter dictionaries for BPLExpCutoff model and then build spectrum
+        document element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of the Prefactor parameter, units of MeV**-1 cm**-2 s**-1
+        Index1 - float
+            value of the Index1 parameter, low-energy spectral index using E**(-Index1) convention
+        Index2 - float
+            value of the Index2 parameter, high-energy spectral index using E**(-Index2) convention
+        BreakValue - float
+            value of the BreakValue parameter, break energy in units of MeV
+        Eabs - float
+            value of the Eabs parameter
+        P1 - float
+            value of the P1 parameters
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        Index1_free - bool
+            flag to set the Index1 parameter free
+        Index2_free - bool
+            flag to set the Index2 parameter free
+        BreakValue_free - bool
+            flag to set the BreakValue parameter free
+        Eabs_free - bool
+            flag to set the Eabs parameter free
+        P1_free - bool
+            flag to set the P1 parameter free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+        
         #some checks on the inputs
         if Prefactor<0 or BreakValue<=0 or Eabs<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, BreakValue, or Eabs is negative or zero.")
-        
+
+        #massage the inputs a bit and make them
+        #accessible later if needed
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.Index1=abs(Index1)
@@ -583,9 +666,11 @@ class Spectrum:
         self.Eabs=Eabs
         self.P1=P1
 
+        #set some more attributes
         self.model_name='BPLExpCutoff'
         self.norm_par='Prefactor'
 
+        #make a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -606,6 +691,7 @@ class Spectrum:
         self.parameters.append({'free':int(P1_free),'name':'P1','minimum':0.1,
                      'maximum':max(300,self.P1*1.5),'scale':1,'value':self.P1})
 
+        #build the spectrum document element
         self.build()
 
     def PLSuperExpCutoff(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,Index2=1,
