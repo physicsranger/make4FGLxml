@@ -96,7 +96,7 @@ class Spectrum:
       Normalization_free=True,model=None)
         create parameter dictionaries corresponding to FileFunction spectral model
     Gaussian(self,Prefactor=1e-9,Mean=7e4,Sigma=1e3,Prefactor_free=True,
-      Mean_free=True,Sigma_Free=True,model=None)
+      Mean_free=True,Sigma_free=True,model=None)
         create parameter dictionaries corresponding to Gaussian spectral model
     PLSuperExpCutoff(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,
       Index2=1,Prefactor_free=True,Index1_free=True,Cutoff_free=True,
@@ -323,7 +323,7 @@ class Spectrum:
             raise ValueError("Input parameters invalid, at least one of Integral, LowerLimit, or UpperLimit is negative or zero.")
         
         if LowerLimit>=UpperLimit:
-            raise ValueError(f"Requested LowerLimit of {LowerLimit:,} is >= UpperLimit of {UpperLimit:,}.")
+            raise ValueError(f"Requested of {LowerLimit = :,} is >= {UpperLimit = :,}.")
 
         #massage the inputs a bit and make accessible
         #for later use, if desired
@@ -403,7 +403,7 @@ class Spectrum:
             raise ValueError("Input parameters invalid, at least one of Integral, LowerLimit, UpperLimit, or BreakValue is negative or zero.")
         
         if LowerLimit>=UpperLimit:
-            raise ValueError(f"Requested LowerLimit of {LowerLimit:,} is >= UpperLimit of {UpperLimit:,}.")
+            raise ValueError(f"Requested of {LowerLimit = :,} is >= {UpperLimit = :,}.")
 
         #massage the inputs a little and make
         #them accessible later, if desired
@@ -1035,18 +1035,45 @@ class Spectrum:
         self.build()
 
     def Gaussian(self,Prefactor=1e-9,Mean=7e4,Sigma=1e3,Prefactor_free=True,
-                 Mean_free=True,Sigma_Free=True,model=None):
+                 Mean_free=True,Sigma_free=True,model=None):
+        '''
+        create parameter dictionaries for the Gaussian model and then build
+        spectrum document element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of the Prefactor parameter, units of cm**-2 s**-1
+        Mean - float
+            value of the Mean parameter, units of MeV
+        Sigma - float
+            value of the Sigma parameter, units of MeV
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        Mean_free - bool
+            flag to set the Mean parameter free
+        Sigma_free - bool
+            flag to set the Sigma parameter Free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+
+        #some checks on the inputs
         if Prefactor<=0 or Mean<0 or Sigma<=0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Mean, or Sigma <=0")
 
+        #massage the inputs a bit and then assign to
+        #attributes for access later if desired
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.Mean=Mean
         self.Sigma=Sigma
 
+        #assign a couple more, useful attributes
         self.model_name='Gaussian'
         self.norm_par='Prefactor'
 
+        #create a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,'maximum':1e6,
                           'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -1056,36 +1083,87 @@ class Spectrum:
         self.parameters.append({'free':int(Sigma_free),'name':'Sigma','minimum':min(30,self.Sigma*0.9),
                           'maximum':max(1e4,self.Sigma*1.5),'scale':1,'value':self.Sigma})
 
+        #create the spectrum document element
         self.build()
 
     def ConstantValue(self,Value=1,Value_free=True,model=None):
+        '''
+        create parameter dictionaries for the ConstantValue model and then build the
+        spectrum document element
+
+        Parameters
+        ----------
+        Value - float
+            value of the Value parameter
+        Value_free - bool
+            flag to set the Value parameter free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+
+        #quick check on the Value parameter
         if Value<0:
             raise ValueError(f"Invalue input for Value = {Value}, must be >=0.")
 
+        #assign values to some attributes to be
+        #available later if desired
         self.Value=Value
 
         self.model_name='ConstantValue'
         self.norm_par="Value"
 
+        #create a dictionary for the parameter
         self.parameters=[{'free':int(Value_free),'name':'Value','minimum':0,
                           'maximum':max(10,self.Value*1.5),'scale':1,'value':self.Value}]
 
+        #create the spectrum document element
         self.build()
 
     def BandFunction(self,norm=1e-9,alpha=1.8,beta=2.5,Ep=0.1,norm_free=True,
                      alpha_free=True,beta_free=True,Ep_free=True,model=None):
+        '''
+        create parameter dictionaries for BandFunction model and then build the
+        spectrum document element
+
+        Parameters
+        ----------
+        norm - float
+            value of the norm parameter, untis of MeV**-1 cm**-2 s**-1
+        alpha - float
+            value of the alpha parameter
+        beta - float
+            value of the beta parameter
+        Ep - float
+            value of the Ep parameter
+        norm_free - bool
+            flag to set the norm parameter free
+        alpha_free - bool
+            flag to set the alpha parameter free
+        beta_free - bool
+            flag to set the beta parameter free
+        Ep_free - bool
+            flag to set the Ep parameter free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability            
+        '''
+
+        #some checks on the inputs
         if norm<0 or Ep<=0:
             raise ValueError('Invalid input parameters, at least one of norm or Ep is <=0')
 
+        #massage the inputs a little and then assign to
+        #attributes for access later if desired
         self.norm_scale=10**np.floor(np.log10(norm))
         self.norm=norm/self.norm_scale
         self.alpha=alpha
         self.beta=beata
         self.Ep=Ep
 
+        #assign a couple more useful attributes
         self.model_name='BandFunction'
         self.norm_par='norm'
 
+        #create a dictionary for each parameter
         self.parameters=[{'free':int(norm_free),'name':'norm','minimum':0,'maximum':1e6,
                           'scale':self.norm_scale,'value':self.norm}]
 
@@ -1098,6 +1176,7 @@ class Spectrum:
         self.parameters.append({'free':int(Ep_free),'name':'Ep','minimum':min(10,self.Ep*0.9),
                                 'maximum':max(10000,self.Ep*1.5),'scale':1,'value':self.Ep})
 
+        #creat the spectrum document element
         self.build()
 
     def DMFitFunction(self,spectrum_file=os.path.join('$(FERMI_DIR)','refdata','fermi',
@@ -1105,9 +1184,50 @@ class Spectrum:
                       bratio=1,channel0=4,channel1=1,norm_free=True,sigmav_free=True,
                       mass_free=True,bratio_free=False,channel0_free=False,channel1_free=False,
                       model=None):
+        '''
+        create the parameter dictionaries for the DMFitFunction model and then build
+        spectrum document element
+
+        Parameters
+        ----------
+        spectrum_file - str or Path-like
+            path to or name of the DM spectrum file
+        norm - float
+            value of the norm parameter
+        sigmav - float
+            value of the sigmav parameter
+        mass - float
+            value of the mass parameter
+        bratio - float
+            value of the bratio parameter
+        channel0 - float
+            value of the channel0 parameter
+        channel1 - float
+            value of the channel1 parameter
+        norm_free - bool
+            flag to set the norm parameter free
+        sigmav_free - bool
+            flag to set the sigmav parameter free
+        mass_free - bool
+            flag to set the mass parameter free
+        bratio_free - bool
+            flag to set the bratio parameter free
+        channel0_free - bool
+            flag to set the channel0 parameter free
+        channel1_free - bool
+            flag to set the channel1 parameter free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
 
         self.spectrum_file=spectrum_file
-        
+
+        #quick check on inupts
+        if norm<0:
+            raise ValueError("Invalid input value of {norm = }, must be >=0")
+
+        #massage the inputs a bit and then assign to some
+        #attributes for access later if desired
         self.norm_scale=10**np.floor(np.log10(norm))
         self.norm=norm/self.norm_scale
         self.sigmav_scale=10**np.floor(np.log10(sigmav))
@@ -1117,9 +1237,11 @@ class Spectrum:
         self.channel0=channel0
         self.channel1=channel1
 
+        #assign some more useful attributes
         self.model_name='DMFitFunction'
         self.norm_par='norm'
 
+        #create a dictionary for each parameter
         self.parameters=[{'free':int(norm_free),'name':'norm','minimum':1e-5,'maximum':1e-5,
                           'scale':self.norm_scale,'value':self.norm}]
 
@@ -1138,30 +1260,70 @@ class Spectrum:
         self.parameters.append({'free':int(channel1_free),'name':'channel1','minimum':min(1,self.channel1*0.9),
                                 'maximum':max(10,self.channel1*1.5),'scale':1,'value':self.channel1})
 
+        #create the spectrum document element
         self.build()
 
+        #make sure to set the extra 'file' attribute of the document element
         self.spectrum.setAttribute('file',self.spectrum_file)
         
 
     def FileFunction(self,spectrum_file,Normalization=1,apply_edisp='false',
                      Normalization_free=True,model=None):
+        '''
+        create parameter dictionary for the FileFunction model and then build
+        the spectrum document element
+
+        Parameters
+        ----------
+        spectrum_file - str or Path-like
+            path to or name of spectrum file
+        Normalization - float
+            value of the normalization parameter
+        apply_edisp - str or bool or int or float
+            value of apply_edisp attribute, ideally this should be "true" or "false",
+            case insensitive, but logic is implemented for bool, int, and float as well,
+            if input is of the latter two types, >0 means 'true' and <=0 means 'false'
+        Normalization_free - bool
+            flag to set the Normalization parameter free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+        
         #some checks on the inputs
         if Normalization<0:
-            raise ValueError(f"Input value of Normalization = {Normalization} is invalid, must be >0.")
+            raise ValueError(f"Input value of {Normalization = } is invalid, must be >0.")
 
+        #try to allow for flexibility of the apply_edisp parameter
+        if isinstance(apply_edisp,str):
+            if apply_edisp.lower() not in ['true','false']:
+                raise ValueError(f'Invalid input of {apply_edisp = }, must be "true" or "false".')
+
+        elif isinstance(apply_edisp,bool):
+            apply_edisp=str(apply_edisp).lower()
+
+        elif isinstance(apply_edisp,(int,float)):
+            apply_edisp='true' if apply_edisp>0 else 'false'
+
+        else:
+            raise TypeError(f'Invalid input type of {type(apply_edisp)}, must be str, bool, int, or float.')
+
+        #assign values to some potentially helpful attributes
         self.Normalization=Normalization
         self.spectrum_file=spectrum_file
-        self.apply_edisp=apply_edisp
+        self.apply_edisp=apply_edisp.lower()
 
         self.model_name='FileFunction'
         self.norm_par='Normalization'
 
+        #create a parameter dictionary
         self.parameters=[{'free':int(Normalization_free),'name':'Normalization',
                     'minimum':min(0.01,self.Normalization*0.9),'maximum':max(10,self.Normalization*1.5),
                     'scale':1,'value':self.Normalization}]
 
+        #create the spectrum document element
         self.build()
 
+        #add the extra attributes of the document element
         self.spectrum.setAttribute('apply_edisp',self.apply_edisp)
         self.spectrum.setAttribute('file',self.spectrum_file)
 
@@ -1171,15 +1333,88 @@ class Spectrum:
 ###########################################################################################
 
 class Spatial:
+    '''
+    A class to create a spectrum XML document element to be added to a source
+    document element in a Fermi LAT XML region model
+
+    ...
+
+    Attributes
+    ----------
+    document : XML document
+        document instance containing the spectrum document element
+    functions : dict
+        dictionary with keys as spectral function names and
+        values pointing to the corresponding functions)
+    spatial : XML document element
+        document element corresponding to the spatialModel
+    spatial_model : str
+        name of the spatial model
+
+    Methods
+    -------
+    get_function_dictionary()
+        create the functions attribute as a dictionary of spectral model
+        functions
+    
+    <for descriptions of all spatial models referenced in the methods below
+    see https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html>
+    ConstantValue(Value=1,spatial_model=None)
+        create spatialModel document element corresponding to the ConstantValue
+        spatial model
+    MapCubeFunction(spatial_file,Normalization=1,spatial_model=None)
+        create spatialModel document element corresponding to the MapCubeFunction
+        spatial model
+    RadialDisk(RA,DEC,Radius,spatial_model=None)
+        create spatialModel document element corresponding to the RadialDisk
+        spatial model
+    RadialGaussian(RA,DEC,Sigma,spatial_model=None)
+        create spatialModel document element corresponding to the RadialGaussian
+        spatial model
+    SkyDir(RA,DEC,spatial_model=None)
+        create spatialModel document element corresponding to the SkyDir
+        spatial model
+    SpatialMap(spatial_file,Prefactor=1,spatial_model=None)
+        create spatialModel document element corresponding to the SpatialMap
+        spatial model
+    '''
+    
     def __init__(self,spatial_model,**kwargs):
+        '''
+        initialize the object, creating a XML document and document element
+        then build the corresponding spatialModel element
+
+        Parameters
+        ----------
+        spatial_model - str
+            name of the spatial model
+        **kwargs - dict or other keyword arguments
+            keyword arguments corresponding to the necessary parameters of
+            the input spatial_model
+        '''
+
+        #create document and document element
         self.document=minidom.getDOMImplementation().createDocument(None,None,None)
         self.spatial=self.document.createElement('spatialModel')
 
+        #assign the functions attribute
         self.get_function_dictionary()
 
+        #do some checks on the input
+        if spatial_model not in self.funtions.keys():
+            raise ValueError('{spatial_model = } not implemented')
+        
+        self.spatial_model=spatial_model
+        
+        #based on the input spatial_model
         self.functions[spatial_model](**kwargs)
 
     def get_function_dictionary(self):
+        '''
+        construct functions attribute as a dictionary
+        of available spatial model functions
+        '''
+        
         self.functions={'SkyDir':self.SkyDir,
                    'RadialDisk':self.RadialDisk,
                    'RadialGaussian':self.RadialGaussian,
@@ -1188,17 +1423,35 @@ class Spatial:
                    'MapCubeFunction':self.MapCubeFunction}
 
     def SkyDir(self,RA,DEC,spatial_model=None):
-        #do some sanity checks
-        if abs(RA)>360:
-            raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
-        if abs(DEC)>90:
-            raise ValueError(f'Input DEC value of {DEC} is invalid, must be between -90 and 90.')
+        '''
+        assign necessary attributes and create document element
+        children corresponding to the SkyDir spatial model
+
+        Paramters
+        ---------
+        RA - float or str
+            right ascension (J2000) of the source, in degrees
+        DEC - float or str
+            declination (J2000) of the source, in degrees
+        spatial_model - None-type or str
+            name of the spatial model, not used but necessary for
+            kwargs functionality
+        '''
         
+        #do some sanity checks on the inputs
+        if abs(RA)>360:
+            raise ValueError(f'Input of {RA = } is invalid, must be between -360 and +360.')
+        if abs(DEC)>90:
+            raise ValueError(f'Input of {DEC = } is invalid, must be between -90 and 90.')
+
+        #assign attributes for possible use later
         self.RA=RA
         self.DEC=DEC
 
+        #set the type attribute
         self.spatial.setAttribute('type','SkyDirFunction')
 
+        #create the document children
         self.spatial.appendChild(parameter_element(free='0',name='RA',maximum='360.0',
                 minimum='-360.0',scale='1.0',value=f'{self.RA:.4f}'))
         self.spatial.appendChild(parameter_element(free='0',name='DEC',maximum='90.0',
@@ -1206,21 +1459,43 @@ class Spatial:
 
     
     def RadialDisk(self,RA,DEC,Radius,spatial_model=None):
+        '''
+        assign necessary attributes and create document element
+        children corresponding to the RadialDisk spatial model
+
+        Parameters
+        ----------
+        RA - float or str
+            right ascension (J2000) of source in degrees
+        DEC - float or str
+            declination (J2000) of source in degrees
+        Radius - float or str
+            radius of extended disk in degrees
+        spatial_model - None-type or str
+            name of the spatial model, not used but necessary for
+            kwargs functionality
+        '''
+
         #do some sanity checks, including converting Radius to float
-        Radius=float(Radius)
         if abs(float(RA))>360:
-            raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
+            raise ValueError(f'Input value {RA = } is invalid, must be between -360 and +360.')
+
         if abs(float(DEC))>90:
-            raise ValueError(f'Input DEC value of {DEC} is invalid, must be between -90 and 90.')
+            raise ValueError(f'Input value {DEC = } is invalid, must be between -90 and 90.')
+
         if float(Radius)<=0:
-            raise ValueError(f'Input Radius value of {Radius} is invalid, must be >0.')
-        
+            raise ValueError(f'Input value {Radius = } is invalid, must be >0.')
+
+        #save inputs to attributes for possible
+        #use later
         self.RA=float(RA)
         self.DEC=float(DEC)
         self.Radius=float(Radius)
 
+        #set the type attribute
         self.spatial.setAttribute('type','RadialDisk')
 
+        #create the necessary document children
         self.spatial.appendChild(parameter_element(free='0',name='Radius',
                 maximum=max(10,self.Radius*1.5),minimum='0',scale='1',value=self.Radius))
         self.spatial.appendChild(parameter_element(free='0',name='RA',maximum='360.0',
@@ -1229,21 +1504,41 @@ class Spatial:
                 minimum='-90.0',scale='1.0',value=f'{self.DEC:.4f}'))
 
     def RadialGaussian(self,RA,DEC,Sigma,spatial_model=None):
-        #do some sanity checks, including converting Sigma to a float
-        Sigma=float(Sigma)
-        if abs(float(RA))>360:
-            raise ValueError(f'Input RA value of {RA} is invalid, must be between -360 and +360.')
-        if abs(float(DEC))>90:
-            raise ValueError(f'Input DEC value of {DEC} is invalid, must be between -90 and 90.')
-        if float(Sigma)<=0:
-            raise ValueError(f'Input Sigma value of {Sigma} is invalid, must be >0.')
+        '''
+        assign necessary attributes and create document element
+        children corresponding to the RadialGaussian sptial model
+
+        Paramters
+        ---------
+        RA - float or str
+            right ascension (J2000) of source in degrees
+        DEC - float or str
+            declination (J2000) of source in degrees
+        Sigma - float or str
+            value of Sigma parmeter in degrees
+        spatial_model - None-type or str
+            name of the spatial model, not used but necessary for
+            kwargs functionality
+        '''
         
+        #do some sanity checks, including converting Sigma to a float
+        if abs(float(RA))>360:
+            raise ValueError(f'Input value of {RA = } is invalid, must be between -360 and +360.')
+        if abs(float(DEC))>90:
+            raise ValueError(f'Input value of {DEC = } is invalid, must be between -90 and 90.')
+        if float(Sigma)<=0:
+            raise ValueError(f'Input value of {Sigma = } is invalid, must be >0.')
+
+        #assign inputs to attributes for possible
+        #use later if desired
         self.RA=float(RA)
         self.DEC=float(DEC)
         self.Sigma=float(Sigma)
 
+        #set the type attribute
         self.spatial.setAttribute('type','RadialGaussian')
 
+        #create the document element children
         self.spatial.appendChild(parameter_element(free='0',name='Sigma',
                 maximum=max(10,self.Sigma*1.5),minimum='0',scale='1',value=self.Sigma))
         self.spatial.appendChild(parameter_element(free='0',name='RA',maximum='360.0',
@@ -1252,45 +1547,92 @@ class Spatial:
                 minimum='-90.0',scale='1.0',value=f'{self.DEC:.4f}'))
 
     def SpatialMap(self,spatial_file,Prefactor=1,spatial_model=None):
+        '''
+        assign necessary attributes and create document element
+        children corresponding to the SpatialMap spatial model
+
+        Parameters
+        ----------
+        spatial_file - str or Path-like
+            path to or name of spatial_file
+        Prefactor - str or float
+            value of Prefactor parameter, units of MeV**-1 sr**-1 cm**-2 s**-1
+        spatial_model - None-type or str
+            name of the spatial model, not used but necessary for
+            kwargs functionality
+        '''
+
+        #quick check on input
+        if float(Prefactor)<=:
+            raise ValueError(f'Input of {Prefactor = :e} is invalid, must be >=0')
+
+        #assign inputs to some attributes for access later
         self.spatial_file=spatial_file
         self.Prefactor=Prefactor
 
+        #assign the necessary attributes to the spatialModel document element
         self.spatial.setAttribute('type','SpatialMap')
         self.spatial.setAttribute('file',self.spatial_file)
         self.spatial.setAttribute('map_based_integral','true')
 
+        #create the document element child
         self.spatial.appendChild(parameter_element(free="0",name="Prefactor",maximum="1000",
                 minimum="0.001",scale="1",value=self.Prefactor))
 
     def ConstantValue(self,Value=1,spatial_model=None):
-        #check on inputs, including making sure value is a float
-        Value=float(Value)
-        if Value<0:
-            raise ValueError(f'Input Value of {Value} is invalid, must be >=0.')
+        '''
+        assign necessary attributes and create document element
+        children corresponding to the ConstantValue spatial model
 
-        self.Value=Value
+        Parameters
+        ----------
+        Value - float or string
+        '''
+        
+        #check on inputs
+        if float(Value)<0:
+            raise ValueError(f'Input {Value = } is invalid, must be >=0.')
 
+        #assign input to some attribute for access later
+        self.Value=float(Value)
+
+        #set type attribute
         self.spatial.setAttribute('type','ConstantValue')
 
+        #create document element child
         self.spatial.appendChild(parameter_element(free="0",name="Value",maximum=max(10,self.Value*1.5),
                     minimum='0',scale='1',value=self.Value))
 
     def MapCubeFunction(self,spatial_file,Normalization=1,spatial_model=None):
-        #check on input value
-        Normalization=float(Normalization)
-        if Normalization<=0:
-            raise ValueError(f'Input value for Normalizaton of {Normalization} is invalid, must be >0.')
-        
-        self.spatial_file=spatial_file
-        self.Normalization=Normalization
+        '''
+        assign necessary attributes and create document element
+        children corresponding to the MapCubeFunction sptial model
 
+        Paramters
+        ---------
+        spatial_file - str or Path-like
+            path to or name of spatial_file file
+        Normalization - float or str
+            value of the Normalization parameter
+        spatial_model - None-type or str
+            name of the spatial model, not used but necessary for
+            kwargs functionality
+        '''
+        
+        #check on input value
+        if (Normalization)<0:
+            raise ValueError(f'Input value of {Normalization = } is invalid, must be >0.')
+
+        #assign inputs to attributes for possible access
+        #later if desired
+        self.spatial_file=spatial_file
+        self.Normalization=float(Normalization)
+
+        #set the necessary attributes
         self.spatial.setAttribute('type','MapCubeFunction')
         self.spatial.setAttribute('file',self.spatial_file)
 
+        #create the document element child
         self.spatial.appendChild(parameter_element(free="0",name="Normalization",
                 maximum=max(1000,self.Normalization*1.5),
-                minimum=min(0.001,self.Normalization*0.9),scale=1,value=self.Normalization))
-
-
-
-        
+                minimum=min(0.0,self.Normalization*0.9),scale=1,value=self.Normalization))
