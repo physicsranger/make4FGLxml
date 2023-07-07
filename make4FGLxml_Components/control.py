@@ -21,6 +21,146 @@ from build_model.utilities import get_ROI_from_event_file
 from make4FGLxml import SourceList
 
 class ControlWidget(QWidget):
+    '''
+    A class to encompass and manage the interactive widgets
+    of the make4FGLxml GUI
+
+    ...
+
+    Attributes
+    ----------
+    <inherits some properties from the PyQt6 QWidget class,
+    see that documentation for more details>
+    catalog_button : PyQt6 QPushButton
+        button to open a file browser and select 4FGL catalog
+        file to select sources from
+    catalog_entry : PyQt6 QLineEdit
+        entry widget for typing in catalog file name, will also
+        display full path to file selected via catalog_button
+    DEC_validator : PyQt6 QDoubleValidator
+        validator to enforce some constraints on the value given to
+        ROI_center_DEC_entry
+    DR_label : PyQt6 QLabel
+        label for DR_spinbox
+    DR_spinbox : PyQt6 QSpinBox
+        spinbox to select 4FGL data release version
+    eighth_row: PyQt6 Qwidget object
+        eighth row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    eleventh_row : PyQt6 Qwidget object
+        eleventh row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    event_file_entry : PyQt6 QLineEdit
+        widget to enter the name of the LAT event file from which
+        the region of interest information will be derived, will
+        also display the path to the file chosen via the
+        use_event_file_button
+    event_file_label : PyQt6 QLabel
+        label for the event_file_entry widget
+    fermi_dir : str
+        path to the fermitools installation, accessed through
+        the FERMI_DIR environment variable
+    fifth_row : PyQt6 Qwidget object
+        fifth row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    first_row : PyQt6 Qwidget object
+        first row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    fourth_row : PyQt6 Qwidget object
+        fourth row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    free_radius_entry : PyQt6 QLineEdit
+        widget to enter the radius limit value for sources
+        to be free
+    free_radius_label : PyQt6 QLabel
+        label for the free_radius_entry
+    free_radius_validator : PyQt6 QDoubleValidator
+        validator to enforce constraints on the value provided
+        to the free_radius_entry widget
+    main_window : PyQt6 QMainWindow object
+        the main window in which this widget will be contained
+    ninth_row : PyQt6 Qwidget object
+        ninth row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    or_label : PyQt6 QLabel
+        label which simply says 'or' with white space around to
+        separate direct region of interest widgets from widgets
+        to get the region of interest information from a LAT
+        event file
+    output_file_entry : PyQt6 QLineEdit
+        widget to enter name of output model file
+    output_file_label : PyQt6 QLabel
+        label widget for the output_file_entry widget
+    RA_validator : PyQt6 QDoubleValidator
+        validator to enforce some constraints on the value given to
+        the ROI_center_RA_entry
+    radius_validator : PyQt6 QDoubleValidator
+        validator to enforce some constraints on the value given to
+        the ROI_radius_entry
+    region_check : PyQt6 QCheckBox
+        check box to make or not make a ds9-style .reg file
+    region_entry : PyQt6 QLineEdit
+        widget to enter name of output ds9-style .reg file,
+        if region_check is checked
+    ROI_center_DEC_entry : PyQt6 QLineEdit
+        widget to enter declination for region of interest center
+        if not using a LAT event file
+    ROI_center_DEC_label : PyQt6 QLabel
+        label for the ROI_center_DEC_entry
+    ROI_center_label : PyQt6 QLabel
+        label for all region of interest related widgets
+    ROI_center_RA_entry : PyQt6 QLineEdit
+        widget to enter right ascension for region of interest center
+        if not using a LAT event file
+    ROI_center_RA_label : PyQt6 QLabel
+        label for the ROI_center_RA_entry widget
+    ROI_radius_entry : PyQt6 QLineEdit
+        widget to enter the radius of the region of interest, if
+        not using a LAT event file
+    ROI_radius_label : PyQt6 QLabel
+        label for the ROI_radius_entry widget
+    save_directory_button : PyQt6 QPushButton
+        button to open a file browser and select the target
+        directory to save source model file in
+    save_directory_entry : PyQt6 QLineEdit
+        widget to enter target directory for files, will also
+        display path chosen with save_directory_button
+    second_row : PyQt6 Qwidget object
+        second row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    seventh_row : PyQt6 Qwidget object
+        seventh row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    sixth_row : PyQt6 Qwidget object
+        sixth row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    tenth_row : PyQt6 Qwidget object
+        tenth row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    third_row : PyQt6 Qwidget object
+        third row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    twelvth_row : PyQt6 Qwidget object
+        twelvth row of widgets, packed horizontally, combined
+        with other 'rows' stacked vertically to achieve
+        desired layout
+    use_event_file_button : PyQt6 QPushButton
+        button to open a file browser and choose a LAT event
+        file from which the region of interest information will
+        be obtained
+    '''
+    
     def __init__(self,main_window):
         super().__init__(main_window)
 
@@ -46,6 +186,7 @@ class ControlWidget(QWidget):
 
     def create_first_row(self):
         self.first_row=QWidget(parent=self)
+        
         #create widgets for inputing catalog file
         self.catalog_button=QPushButton("Catalog",parent=self.first_row)
         self.catalog_button.clicked.connect(self.choose_catalog)
@@ -67,7 +208,7 @@ class ControlWidget(QWidget):
 
         #set reasonable limits on the spinbox
         self.DR_spinbox.setMinimum(1)
-        self.DR_spinbox.setMaximum(3)
+        self.DR_spinbox.setMaximum(4)
 
     def create_second_row(self):
         self.second_row=QWidget(parent=self)
