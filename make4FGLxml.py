@@ -122,14 +122,18 @@ class SourceList:
             warnings.warn(f'Region XML model {output_name} already exists, will be overwritten\
  (note, some systems may be case-insensitive).')
 
-        if DR not in [1,2,3]:
-            raise ValueError(f'DR={DR} is an invalid choice of data release, must be 1, 2, or 3.')
+        if DR not in [1,2,3,4]:
+            raise ValueError(f'{DR = } is an invalid choice of data release, must be 1, 2, 3, or 4.')
 
         self.catalog_file=catalog_file
         self.output_name=os.path.join(write_directory,output_name)
         self.write_directory=write_directory
         self.DR=DR
-        self.variability_threshold=24.725 if DR==3 else 21.666 if DR==1 else 18.475
+        self.variability_threshold=27.69 if DR==4 \
+                              else 24.725 if DR==3 \
+                              else 21.666 if DR==2 \
+                              else 18.475
+        
         #self.fermi_dir=os.getenv('FERMI_DIR')
 
         #get the region of inerest information

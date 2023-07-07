@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QApplication)
 
 from PyQt6.QtCore import QTimer
+
 from PyQt6.QtGui import QDoubleValidator
 
 from build_model.utilities import get_ROI_from_event_file
