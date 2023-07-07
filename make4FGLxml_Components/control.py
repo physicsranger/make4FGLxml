@@ -48,10 +48,14 @@ class ControlWidget(QWidget):
         eighth row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    eighth_row_layout : PyQt6 QHBoxLayout
+        layout for the eighth row
     eleventh_row : PyQt6 Qwidget object
         eleventh row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    eleventh_row_layout : PyQt6 QHBoxLayout
+        layout for the eleventh row
     event_file_entry : PyQt6 QLineEdit
         widget to enter the name of the LAT event file from which
         the region of interest information will be derived, will
@@ -59,6 +63,23 @@ class ControlWidget(QWidget):
         use_event_file_button
     event_file_label : PyQt6 QLabel
         label for the event_file_entry widget
+    extended_template_directory_button : PyQt6 QPushButton
+        button to open a directory browser and specify the directory
+        with extended source templates
+    extended_template_directory_entry : PyQt6 QLineEdit
+        widget to enter the path to the directory where the extended source
+        template files are stored
+    extended_template_directory_label : PyQt6 QLabe
+        label for the extended_template_directory_entry
+    extra_radius_entry : PyQt6 QLineEdit
+        widget to enter the radius beyond the region of interest out to
+        which sources are included to account for the size of the
+        low-energy point-spread function
+    extra_radius_label : PyQt6 QLabel
+        label for the extra_radius_entry widget
+    extra_radius_validator : PyQt6 QDoubleValidator
+        validator to enforce some constraints on the value given to
+        the extra_radius_entry
     fermi_dir : str
         path to the fermitools installation, accessed through
         the FERMI_DIR environment variable
@@ -66,14 +87,26 @@ class ControlWidget(QWidget):
         fifth row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    fifth_row_layout : PyQt6 QHBoxLayout
+        layout for the fifth row
     first_row : PyQt6 Qwidget object
         first row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    first_row_layout : PyQt6 QHBoxLayout
+        layout for the first row
+    force_point_source_check : PyQt6 QCheckBox
+        checkbox to indicate if extended sources should be cast as
+        point sources
     fourth_row : PyQt6 Qwidget object
         fourth row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    fourth_row_layout : PyQt6 QHBoxLayout
+        layout for the fourth row
+    free_galactic_index_check : PyQt6 QCheckBox
+        check box to indicate if the Galactic diffuse component spectrum
+        should be modified by a power law with free spectral index
     free_radius_entry : PyQt6 QLineEdit
         widget to enter the radius limit value for sources
         to be free
@@ -82,12 +115,53 @@ class ControlWidget(QWidget):
     free_radius_validator : PyQt6 QDoubleValidator
         validator to enforce constraints on the value provided
         to the free_radius_entry widget
+    galactic_model_file_button : PyQt6 QPushButton
+        button to open a file browser and select the file for the
+        Galactic diffuse emission
+    galactic_model_file_entry : PyQt6 QLineEdit
+        widget for the path to the file for the Galactic diffuse emission,
+        will display file chosen by galactic_model_file_button
+    galactic_model_file_label : PyQt 6 QLabel
+        label for the galactic_model_file_entry widget
+    galactic_name_entry : PyQt 6QLineEdit
+        widget for the name of the Galactic diffuse emission
+        component in the model
+    galactic_name_label : PyQt6 QLabel
+        label for the galactic_name_entry
+    isotropic_name_entry : PyQt6 QLineEdit
+        widget to enter the name of the isotropic diffuse component
+        in the model
+    isotropic_name_label : PyQt6 QLabel
+        label for the isotropic_name_entry
+    isotropic_template_file_button : PyQt6 QPushButton
+        button to open a file browser and select the template file for
+        the isotropic diffuse component
+    isotropic_template_file_entry : PyQt6 QLineEdit
+        widget for the isotropic diffuse component template file
+    isotropic_template_file_label : PyQ6 QLabel
+        label for the isotropic_template_file_entry
+    main_layout : PyQt6 QVBoxLayout
+        overall layout for the ControlWidget
     main_window : PyQt6 QMainWindow object
         the main window in which this widget will be contained
+    make_model_button : PyQt6 QPushButton
+        button to use the specified inputs to generate a source model file
+    max_free_radius_entry : PyQt6 QLineEdit
+        widget to enter the absoulte maximum radius for free sources
+    max_free_radius_label : PyQt6 QLabel
+        label for max_free_radius_entry widget
+    max_free_radius_validator : PyQt6 QDoubleValidator
+        validator to enforce some constraints on the value given to
+        max_free_radius_entry
+    normalizations_only_check : PyQt6 QCheckBox
+        checkbox to indicate if only source normalizations can possibly
+        be set free or not
     ninth_row : PyQt6 Qwidget object
         ninth row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    ninth_row_layout : PyQt6 QHBoxLayout
+        layout for the ninth row
     or_label : PyQt6 QLabel
         label which simply says 'or' with white space around to
         separate direct region of interest widgets from widgets
@@ -97,6 +171,8 @@ class ControlWidget(QWidget):
         widget to enter name of output model file
     output_file_label : PyQt6 QLabel
         label widget for the output_file_entry widget
+    quit_button : PyQt6 QPushButton
+        button to restore stderr and stdout and quit the GUI
     RA_validator : PyQt6 QDoubleValidator
         validator to enforce some constraints on the value given to
         the ROI_center_RA_entry
@@ -126,7 +202,7 @@ class ControlWidget(QWidget):
     ROI_radius_label : PyQt6 QLabel
         label for the ROI_radius_entry widget
     save_directory_button : PyQt6 QPushButton
-        button to open a file browser and select the target
+        button to open a directory browser and select the target
         directory to save source model file in
     save_directory_entry : PyQt6 QLineEdit
         widget to enter target directory for files, will also
@@ -135,42 +211,175 @@ class ControlWidget(QWidget):
         second row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    second_row_layout : PyQt6 QHBoxLayout
+        layout for the second row
     seventh_row : PyQt6 Qwidget object
         seventh row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    seventh_row_layout : PyQt6 QHBoxLayout
+        layout for the seventh row
+    significance_entry : PyQt6 QLineEdit
+        widget to enter the significance threshold for free sources
+    significance_label : PyQt6 QLabel
+        label for significance_entry widget
+    significance_validator : PyQt6 QDoubleValidator
+        validator to enforce some constraints on the values given to
+        significance_entry
     sixth_row : PyQt6 Qwidget object
         sixth row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    sixth_row_layout : PyQt6 QHBoxLayout
+        layout for the sixth row
     tenth_row : PyQt6 Qwidget object
         tenth row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    tenth_row_layout : PyQt6 QHBoxLayout
+        layout for the tenth row
     third_row : PyQt6 Qwidget object
         third row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    third_row_layout : PyQt6 QHBoxLayout
+        layout for the third row
     twelvth_row : PyQt6 Qwidget object
         twelvth row of widgets, packed horizontally, combined
         with other 'rows' stacked vertically to achieve
         desired layout
+    twelvth_row_layout : PyQt6 QHBoxLayout
+        layout for the twelvth row
     use_event_file_button : PyQt6 QPushButton
         button to open a file browser and choose a LAT event
         file from which the region of interest information will
         be obtained
+    use_extended_catalog_names_check : PyQt6 QCheckBox
+        check box to indicate if 4FGL catalog names should be used for
+        extended sources instead of multi-wavelength association names
+    use_old_name_convention_check : PyQt6 QCheckBox
+        check box to indicate if the old naming convention from earlier
+        #FGL scripts should be used (prepend an underscore and remove
+        all spaces from names)
+    variable_sources_free_check : PyQt6 QCheckBox
+        check box to indicate if variable sources should be have free
+        normalization parameters even if they do not satisfy other
+        criteria
+
+    Methods
+    -------
+    choose_catalog()
+        handles opening file browser to select the 4FGL catalog file
+    choose_galactic_model_file()
+        handles opening file browser to select the Galactic diffuse
+        emission file
+    choose_extended_directory()
+        handles opening the directory browser to select the directory
+        with the extended source template files
+    choose_isotropic_template_file()
+        handles opening file browser to select the isotropic diffuse
+        component template file
+    choose_save_directory()
+        handles opening the directory browser to select the target
+        directory for the source model
+    create_eighth_row()
+        create the eighth_row widget and all associated widgets
+    create_eleventh_row()
+        create the eleventh_row widget and all associated widgets
+    create_fifth_row()
+        create the fifth_row widget and all associated widgets
+    create_first_row()
+        create the first_row widget and all associated widgets
+    create_fourth_row()
+        create the fourth_row widget and all associated widgets
+    create_model()
+        invoked by the make_model_button, use the supplied inputs
+        in a SourceList object from make4FGLxml to create a
+        source model XML file, and possibly a ds9-style .reg file
+    create_ninth_row()
+        create the ninth_row widget and all associated widgets
+    create_second_row()
+        create the second_row widget and all associated widgets
+    create_seventh_row()
+        create the seventh_row widget and all associated widgets
+    create_sixth_row()
+        create the sixth_row widget and all associated widgets
+    create_tenth_row()
+        create the tenth_row widget and all associated widgets
+    create_third_row()
+        create the third_row widget and all associated widgets
+    create_twelvth_row()
+        create the twelvth_row widget and all associated widgets
+    create_widgets()
+        create all necessary widgets and assign them as object
+        attributes
+    get_ROI_center()
+        handles opening file browser to select LAT event file
+        from which the method then extracts the region of
+        interest information
+    pack_eighth_row()
+        pack the eighth_row widget and all associated widgets
+    pack_eleventh_row()
+        pack the eleventh_row widget and all associated widgets
+    pack_fifth_row()
+        pack the fifth_row widget and all associated widgets
+    pack_first_row()
+        pack the first_row widget and all associated widgets
+    pack_fourth_row()
+        pack the fourth_row widget and all associated widgets
+    pack_ninth_row()
+        pack the ninth_row widget and all associated widgets
+    pack_second_row()
+        pack the second_row widget and all associated widgets
+    pack_seventh_row()
+        pack the seventh_row widget and all associated widgets
+    pack_sixth_row()
+        pack the sixth_row widget and all associated widgets
+    pack_tenth_row()
+        pack the tenth_row widget and all associated widgets
+    pack_third_row()
+        pack the third_row widget and all associated widgets
+    pack_twelvth_row()
+        pack the twelvth_row widget and all associated widgets
+    pack_widgets()
+        pack all the widgets in the individual rows and within
+        the ControlWidget
+    quit_application()
+        restore the old stdout and stderror and quit the GUI
+    set_make_model_state()
+        check the widgets set to be watched to determine if
+        the make_model_button is active or not
+    set_significance_type()
+        determine if the significance threshold is for TS or
+        average significance based on the extension of the
+        4FGL catalog file chosen
     '''
     
     def __init__(self,main_window):
+        '''
+        create the ControlWidget object with all child widgets
+        and pack everything in a layout of vertically stacked
+        rows in which widgets are horizontally stacked
+        '''
+
+        #init for the base class
         super().__init__(main_window)
 
+        #pointer to the main window this widget is in
         self.main_window=main_window
-        
+
+        #get the FERMI_DIR variable if is set
         self.fermi_dir=os.environ.get('FERMI_DIR')
 
+        #create all the widgets
         self.create_widgets()
 
     def create_widgets(self):
+        '''
+        create all the widgets for each row of the GUI
+        '''
+
+        #create the 'row' widgets and all associated widgets
         self.create_first_row()
         self.create_second_row()
         self.create_third_row()
@@ -185,6 +394,10 @@ class ControlWidget(QWidget):
         self.create_twelvth_row()
 
     def create_first_row(self):
+        '''
+        create the first_row widget and all associated widgete=s
+        '''
+        
         self.first_row=QWidget(parent=self)
         
         #create widgets for inputing catalog file
@@ -211,6 +424,10 @@ class ControlWidget(QWidget):
         self.DR_spinbox.setMaximum(4)
 
     def create_second_row(self):
+        '''
+        create the second_row widget and all associated widgete=s
+        '''
+        
         self.second_row=QWidget(parent=self)
 
         #create widgets relating to output file
@@ -225,6 +442,10 @@ class ControlWidget(QWidget):
         self.output_file_entry=QLineEdit('my_model.xml',parent=self.second_row)
 
     def create_third_row(self):
+        '''
+        create the third_row widget and all associated widgete=s
+        '''
+        
         self.third_row=QWidget(parent=self)
         
         #create widgets for the region file
@@ -235,6 +456,10 @@ class ControlWidget(QWidget):
         ##users who edit this and then make a change to the xml name
 
     def create_fourth_row(self):
+        '''
+        create the fourth_row widget and all associated widgete=s
+        '''
+        
         self.fourth_row=QWidget(parent=self)
         
         #create widgets for ROI center
@@ -281,6 +506,10 @@ class ControlWidget(QWidget):
         self.event_file_entry=QLineEdit(parent=self.fourth_row)
 
     def create_fifth_row(self):
+        '''
+        create the fifth_row widget and all associated widgete=s
+        '''
+        
         self.fifth_row=QWidget(parent=self)
 
         #now create widgets for optional parameters        
@@ -309,6 +538,10 @@ class ControlWidget(QWidget):
         self.extra_radius_entry.textEdited.connect(self.set_make_model_state)
 
     def create_sixth_row(self):
+        '''
+        create the sixth_row widget and all associated widgete=s
+        '''
+        
         self.sixth_row=QWidget(parent=self)
         
         #would be good to have a 'trace' set on this to modify based on XML or FITS
@@ -323,6 +556,10 @@ class ControlWidget(QWidget):
         self.significance_entry.textEdited.connect(self.set_make_model_state)
 
     def create_seventh_row(self):
+        '''
+        create the seventh_row widget and all associated widgete=s
+        '''
+        
         self.seventh_row=QWidget(parent=self)
         
         #now for option check boxes
@@ -333,6 +570,10 @@ class ControlWidget(QWidget):
         self.variable_sources_free_check.setChecked(True)
 
     def create_eighth_row(self):
+        '''
+        create the eighth_row widget and all associated widgete=s
+        '''
+        
         self.eighth_row=QWidget(parent=self)
         
         self.use_extended_catalog_names_check=QCheckBox("Use Catalog Names For Extended Sources?",parent=self.eighth_row)
@@ -342,6 +583,10 @@ class ControlWidget(QWidget):
         self.free_galactic_index_check.setChecked(True)
 
     def create_ninth_row(self):
+        '''
+        create the ninth_row widget and all associated widgete=s
+        '''
+        
         self.ninth_row=QWidget(parent=self)
         
         #now for diffuse files/directories and names
@@ -350,7 +595,7 @@ class ControlWidget(QWidget):
                     'galdiffuse','gll_iem_v07.fits']),parent=self.ninth_row)
         
         else:
-            self.galactic_model_file_entry=QineEdit(os.path.join(self.fermi_dir,'refdata','fermi',
+            self.galactic_model_file_entry=QLineEdit(os.path.join(self.fermi_dir,'refdata','fermi',
                     'galdiffuse','gll_iem_v07.fits'),parent=self.ninth_row)
 
         self.galactic_model_file_entry.setFixedWidth(400)
@@ -371,6 +616,10 @@ class ControlWidget(QWidget):
         self.galactic_name_entry.textEdited.connect(self.set_make_model_state)
 
     def create_tenth_row(self):
+        '''
+        create the tenth_row widget and all associated widgete=s
+        '''
+        
         self.tenth_row=QWidget(parent=self)
 
         #now for diffuse files/directories and names
@@ -399,6 +648,10 @@ class ControlWidget(QWidget):
         self.isotropic_name_entry.textEdited.connect(self.set_make_model_state)
 
     def create_eleventh_row(self):
+        '''
+        create the eleventh_row widget and all associated widgete=s
+        '''
+        
         self.eleventh_row=QWidget(parent=self)
         
         #now for diffuse files/directories and names
@@ -409,7 +662,7 @@ class ControlWidget(QWidget):
         
         else:
             self.extended_template_directory_entry=\
-                    QineEdit(os.path.join(self.fermi_dir,'data','pyBurstAnalysisGUI','template'),
+                    QLineEdit(os.path.join(self.fermi_dir,'data','pyBurstAnalysisGUI','template'),
                              parent=self.eleventh_row)
 
         self.extended_template_directory_entry.setFixedWidth(400)
@@ -422,6 +675,10 @@ class ControlWidget(QWidget):
         self.extended_template_directory_button.setFixedWidth(125)
 
     def create_twelvth_row(self):
+        '''
+        create the twelvth_row widget and all associated widgete=s
+        '''
+        
         self.twelvth_row=QWidget(parent=self)
         
         #now we need a button to actually make the files
@@ -441,12 +698,18 @@ class ControlWidget(QWidget):
 
     
     def pack_widgets(self):
+        '''
+        pack all of the widgets with each 'row' widget and
+        within the ControlWidget
+        '''
+        
         #We're going to stack rows vertically, so make a main layout
         #and then pack the widgets in 'rows', with only related widgets in each row
         #so each row will need to be a horizontal layout
         self.main_layout=QVBoxLayout()
         #self.main_layout.setSpacing(0)
 
+        #peack all widgets within each 'row'
         self.pack_first_row()
         self.pack_second_row()
         self.pack_third_row()
@@ -459,7 +722,8 @@ class ControlWidget(QWidget):
         self.pack_tenth_row()
         self.pack_eleventh_row()
         self.pack_twelvth_row()
-        
+
+        #add all 'row' widgets to the ControlWidget Layout
         self.main_layout.addWidget(self.first_row)
         self.main_layout.addWidget(self.second_row)
         self.main_layout.addWidget(self.third_row)
@@ -478,6 +742,10 @@ class ControlWidget(QWidget):
         self.setLayout(self.main_layout)
 
     def pack_first_row(self):
+        '''
+        pack the first_row widget and all associated widgete=s
+        '''
+        
         self.first_row_layout=QHBoxLayout()
         self.first_row_layout.setContentsMargins(0,0,0,0)
         
@@ -491,6 +759,10 @@ class ControlWidget(QWidget):
         self.first_row.setLayout(self.first_row_layout)
 
     def pack_second_row(self):
+        '''
+        pack the second_row widget and all associated widgete=s
+        '''
+        
         self.second_row_layout=QHBoxLayout()
         self.second_row_layout.setContentsMargins(0,0,0,0)
         
@@ -503,6 +775,10 @@ class ControlWidget(QWidget):
         self.second_row.setLayout(self.second_row_layout)
         
     def pack_third_row(self):
+        '''
+        pack the third_row widget and all associated widgete=s
+        '''
+        
         self.third_row_layout=QHBoxLayout()
         self.third_row_layout.setContentsMargins(0,0,0,0)
         
@@ -514,6 +790,10 @@ class ControlWidget(QWidget):
         self.third_row.setLayout(self.third_row_layout)
         
     def pack_fourth_row(self):
+        '''
+        pack the fourth_row widget and all associated widgete=s
+        '''
+        
         self.fourth_row_layout=QHBoxLayout()
         self.fourth_row_layout.setContentsMargins(0,0,0,0)
         
@@ -540,6 +820,10 @@ class ControlWidget(QWidget):
         self.fourth_row.setLayout(self.fourth_row_layout)
 
     def pack_fifth_row(self):
+        '''
+        pack the fifth_row widget and all associated widgete=s
+        '''
+        
         self.fifth_row_layout=QHBoxLayout()
         self.fifth_row_layout.setContentsMargins(0,0,0,0)
 
@@ -555,6 +839,10 @@ class ControlWidget(QWidget):
         self.fifth_row.setLayout(self.fifth_row_layout)
 
     def pack_sixth_row(self):
+        '''
+        pack the sixth_row widget and all associated widgete=s
+        '''
+        
         self.sixth_row_layout=QHBoxLayout()
         self.sixth_row_layout.setContentsMargins(0,0,0,0)
 
@@ -566,6 +854,10 @@ class ControlWidget(QWidget):
         self.sixth_row.setLayout(self.sixth_row_layout)
 
     def pack_seventh_row(self):
+        '''
+        pack the seventh_row widget and all associated widgete=s
+        '''
+        
         self.seventh_row_layout=QHBoxLayout()
         self.seventh_row_layout.setContentsMargins(0,0,0,0)
         
@@ -578,6 +870,10 @@ class ControlWidget(QWidget):
         self.seventh_row.setLayout(self.seventh_row_layout)
 
     def pack_eighth_row(self):
+        '''
+        pack the eighth_row widget and all associated widgete=s
+        '''
+        
         self.eighth_row_layout=QHBoxLayout()
         self.eighth_row_layout.setContentsMargins(0,0,0,0)
 
@@ -589,6 +885,10 @@ class ControlWidget(QWidget):
         self.eighth_row.setLayout(self.eighth_row_layout)
 
     def pack_ninth_row(self):
+        '''
+        pack the ninth_row widget and all associated widgete=s
+        '''
+        
         self.ninth_row_layout=QHBoxLayout()
         self.ninth_row_layout.setContentsMargins(0,0,0,0)
 
@@ -603,6 +903,10 @@ class ControlWidget(QWidget):
         self.ninth_row.setLayout(self.ninth_row_layout)
 
     def pack_tenth_row(self):
+        '''
+        pack the tenth_row widget and all associated widgete=s
+        '''
+        
         self.tenth_row_layout=QHBoxLayout()
         self.tenth_row_layout.setContentsMargins(0,0,0,0)
         
@@ -617,6 +921,10 @@ class ControlWidget(QWidget):
         self.tenth_row.setLayout(self.tenth_row_layout)
 
     def pack_eleventh_row(self):
+        '''
+        pack the eleventh_row widget and all associated widgete=s
+        '''
+        
         self.eleventh_row_layout=QHBoxLayout()
         self.eleventh_row_layout.setContentsMargins(0,0,0,0)
 
@@ -630,6 +938,10 @@ class ControlWidget(QWidget):
         self.eleventh_row.setLayout(self.eleventh_row_layout)
 
     def pack_twelvth_row(self):
+        '''
+        pack the twelvth_row widget and all associated widgete=s
+        '''
+        
         self.twelvth_row_layout=QHBoxLayout()
         self.twelvth_row_layout.setContentsMargins(0,0,0,0)
         
@@ -640,8 +952,11 @@ class ControlWidget(QWidget):
 
         self.twelvth_row.setLayout(self.twelvth_row_layout)
 
-    #function to decide if the make_model_button should be active or not
     def set_make_model_state(self):
+        '''
+        determine if the make_model_button should be enabled or not
+        '''
+        
         #lots of things to check so that the make_model_button can be enabled
         if os.path.exists(self.catalog_entry.text()) and\
            self.ROI_center_RA_entry.hasAcceptableInput() and\
@@ -660,8 +975,12 @@ class ControlWidget(QWidget):
         else:
             self.make_model_button.setEnabled(False)
 
-    #function to open a file dialog window and select the catalog file
     def choose_catalog(self):
+        '''
+        open a QFileDialog for selecting the 4FGL catalog file and then
+        assign that to the appropriate entry
+        '''
+        
         #first, determine the starting directory
         start_dir=(os.getcwd() if self.fermi_dir is None else self.fermi_dir)
 
@@ -673,9 +992,15 @@ class ControlWidget(QWidget):
         self.catalog_entry.setText(catalog_file_name)
         return
 
-    #function to tweak the significance label based on if a FITS or XML catalog is selected
     def set_significance_type(self):
-        if os.path.dirname(self.catalog_entry.text()).split('.')[-1].lower()=='xml':
+        '''
+        change the text of the significance_label to reflect what value
+        the significance limit applies to, TS or average significance, based
+        on the extension of the 4FGL catalog file
+        '''
+        
+        ##if os.path.dirname(self.catalog_entry.text()).split('.')[-1].lower()=='xml':
+        if self.catalog_entry.text().lower().endswith('xml'):
             self.significance_label.setText("Minimum Test Statistic Value In Catalog For Free Sources:")
         else:
             self.significance_label.setText("Minimum Average Significance In Catalog For Free Sources:")
@@ -683,8 +1008,12 @@ class ControlWidget(QWidget):
         #also check the make_model_button
         self.set_make_model_state()
 
-    #function to open a file dialog window to select the save location
     def choose_save_directory(self):
+        '''
+        open a QFileDialog to allow the user to select the target directory for
+        the source model file and set the selection to the appropriate entry
+        '''
+        
         #first, determine the starting directory
         start_dir=(self.save_directory_entry.text()\
                    if os.path.exists(self.save_directory_entry.text()) else os.getcwd())
@@ -696,9 +1025,13 @@ class ControlWidget(QWidget):
         self.save_directory_entry.setText(save_directory)
         return
 
-    #function to open a file dialog window to select the directory with the extended source
-    #template files named in the catalog file
     def choose_extended_directory(self):
+        '''
+        open a QFileDialog to allow the user to select the directory with the
+        extended source template files and then set the selection to
+        the appropriate entry
+        '''
+        
         #first, determine the starting directory for the file dialog
         start_dir=(self.extended_template_directory_entry.text()\
                    if os.path.exists(self.extended_template_directory_entry.text()) else os.getcwd())
@@ -711,8 +1044,12 @@ class ControlWidget(QWidget):
         self.extended_template_directory_entry.setText(extended_directory)
         return
 
-    #function to choose the Galactic diffuse model file
     def choose_galactic_model_file(self):
+        '''
+        open a QFileDialog to allow the user to select the Galactic diffuse model file
+        and then set the selection to the appropriate entry
+        '''
+        
         #first, determine the starting directory for the file dialog
         start_dir=(self.galactic_model_file_entry.text()\
                    if os.path.exists(self.galactic_model_file_entry.text()) else os.getcwd())
@@ -726,8 +1063,12 @@ class ControlWidget(QWidget):
             self.galactic_model_file_entry.setText(galactic_file)
         return
 
-    #function to choose the Isotropic diffuse component template file
     def choose_isotropic_template_file(self):
+        '''
+        open a QFileDialog to allow the user to select the isotropic diffuse component
+        template file and set the selection to the appropriate entry
+        '''
+        
         #first, determine the starting directory
         start_dir=(self.isotropic_template_file_entry.text()\
                    if os.path.exists(self.isotropic_template_file_entry.text()) else os.getcwd())
@@ -740,8 +1081,12 @@ class ControlWidget(QWidget):
         if isotropic_file!='' and isotropic_file is not None:
             self.isotropic_template_file_entry.setText(isotropic_file)
 
-    #function to get the region of interest information from an event file
     def get_ROI_center(self):
+        '''
+        open a QFileDialog to allow the user to select a LAT event file from which the
+        region of interest information is then extracted
+        '''
+        
         #first, we need to determine if the current value in the event file entry is valid
         if not os.path.exists(self.event_file_entry.text()):
             #if we get in here, open a file dialog to choose an event file, start at the current dir
@@ -764,10 +1109,12 @@ class ControlWidget(QWidget):
         else:
             warnings.warn('Note, must select a valid event file')
 
-    #need to set conditions for the create_model button to be active or not
-    #so that I don't have to do the argument checks here, use the isValid method
-    #for the QLineEdit objects and check that files/directories exist
     def create_model(self):
+        '''
+        use the inputs specified in the GUI to create a SourceList object
+        and creat a source model XML file
+        '''
+        
         #do stuff to make the XML file (and possible .reg file)
         
         source_list=SourceList(self.catalog_entry.text(),
@@ -800,8 +1147,12 @@ class ControlWidget(QWidget):
                                self.free_galactic_index_check.isChecked(),
                                self.use_old_name_convention_check.isChecked())
 
-
     def quit_application(self):
+        '''
+        print a polite message to the terminal before resetting
+        stdout and stderr and then quitting the GUI
+        '''
+        
         self.main_window.terminal_widget.write('Goodbye!')
         
         sys.stdout=self.main_window.old_stdout
