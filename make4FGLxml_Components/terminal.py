@@ -4,10 +4,48 @@ from PyQt6.QtWidgets import (
     QWidget,
     QTextEdit,
     QHBoxLayout)
+
 from PyQt6.QtGui import QTextOption,QTextCursor
 
 class TerminalWidget(QWidget):
+    '''
+    A class for creating and managing a "terminal" widget in the
+    make4FGLxml GUI (this class can, actually, be applied more
+    generally and is not limited to the make4FGL GUI).
+    This captures the stdout and stderr and prints
+    to a window in the GUI.
+
+    ...
+
+    Attributes
+    ----------
+    <inherits some properties from the PyQt6 QWidget class,
+    see that documentation for more details>
+    main_window : PyQt6 QMainWindow object
+        the main window in which this widget will be contained
+    terminal_layout : PyQt6 QHBoxLayout object
+        layout object for the terminal
+    terminal_out : PyQt6 QTextEdit object
+        the widget handing the display of text from stdout and stderr
+
+    Methods
+    -------
+    flush()
+        method for stdout and stderr compatability
+    write(text)
+        method to insert text received from stdout and stderr
+        and move the cursor to the end of the line
+    '''
+    
     def __init__(self,main_window):
+        '''
+        Parameters
+        ----------
+        main_window - PyQt6 QMainWindow object
+            the main window within which this widget is contained
+        '''
+
+        #call init for the base class
         super().__init__(main_window)
 
         self.main_window=main_window
@@ -25,7 +63,8 @@ class TerminalWidget(QWidget):
         self.terminal_out.append('')
         self.terminal_out.moveCursor(QTextCursor().MoveOperation(11))
         self.terminal_out.setReadOnly(True)
-        
+
+        #set the layout, ensure that widget extends to edge of window
         self.terminal_layout=QHBoxLayout()
         self.terminal_layout.setContentsMargins(0,0,0,0)
 
@@ -34,6 +73,15 @@ class TerminalWidget(QWidget):
         self.setLayout(self.terminal_layout)
 
     def write(self,text):
+        '''
+        method to insert text into the QTextEdit instance and display
+
+        Parameters
+        ----------
+        text - str
+            text received from stderr or stdout to display
+        '''
+        
         #turn off the read only property
         self.terminal_out.setReadOnly(False)
 
@@ -49,6 +97,11 @@ class TerminalWidget(QWidget):
         self.terminal_out.setReadOnly(True)
 
     def flush(self):
+        '''
+        method for compatability when redirecting stderr and stdout
+        '''
+
+        #do nothing
         pass
         
         
