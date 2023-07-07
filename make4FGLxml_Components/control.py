@@ -1,5 +1,8 @@
 import sys,os,warnings
 
+#need to update things to use the Path objects
+from pathlib import Path
+
 from PyQt6.QtWidgets import (
     QWidget,
     QPushButton,
