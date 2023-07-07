@@ -697,10 +697,43 @@ class Spectrum:
     def PLSuperExpCutoff(self,Prefactor=1e-12,Index1=2,Scale=1000,Cutoff=1000,Index2=1,
                          Prefactor_free=True,Index1_free=True,Cutoff_free=True,Index2_free=False,
                          Scale_free=False,model=None):
+        '''
+        create parameter dictionaries for the PLSuperExpCutoff model and then build
+        spectrum parameter element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of the Prefactor parameter, in units of MeV**-1 cm**-2 s**-1
+        Index1 - float
+            value of the Index1 parameter, uses the E**(-Index1) convention
+        Scale - float
+            value of the Scale parameter, in units of MeV
+        Cutoff - float
+            value of the Cutoff parameter, in units of MeV
+        Index2 - float
+            value of the Index2 parameter (the exponential index)
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        Index1_free - bool
+            flag to set the Index1 parameter free
+        Cutoff_free - bool
+            flag to set the Cutoff parameter free
+        Index2_free - bool
+            flag to set the Index2 parameter free
+        Scale_free - bool
+            flag to set the Scale parameter free, NOTE: it is not
+            recommended to set this flag to True
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+        
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Cutoff<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, Cutoff, or Index2 is negative or zero.")
-        
+
+        #massage the inputs a little and make
+        #them available later if desired
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.Index1=abs(Index1)
@@ -708,9 +741,11 @@ class Spectrum:
         self.Cutoff=Cutoff
         self.Index2=Index2
 
+        #set some more attributes
         self.model_name='PLSuperExpCutoff'
         self.norm_par='Prefactor'
 
+        #make a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -726,15 +761,49 @@ class Spectrum:
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
                      'scale':1,'value':self.Index2})
 
+        #create the spectrum document element
         self.build()
 
     def PLSuperExpCutoff2(self,Prefactor=1e-12,Index1=2,Scale=1000,Expfactor=1,Index2=1,
                           Prefactor_free=True,Index1_free=True,Expfactor_free=True,Index2_free=False,
                           Scale_free=False,model=None):
+        '''
+        create parameter dictionaries for the PLSuperExpCutoff2 model and then build
+        spectrum parameter element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of the Prefactor parameter, in units of MeV**-1 cm**-2 s**-1
+        Index1 - float
+            value of the Index1 parameter, uses the E**(-Index1) convention
+        Scale - float
+            value of the Scale parameter, in units of MeV
+        Expfactor - float
+            value of the Expfactor parameter
+        Index2 - float
+            value of the Index2 parameter (the exponential index)
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        Index1_free - bool
+            flag to set the Index1 parameter free
+        Expfactor_free - bool
+            flag to set the Cutoff parameter free
+        Index2_free - bool
+            flag to set the Index2 parameter free
+        Scale_free - bool
+            flag to set the Scale parameter free, NOTE: it is not
+            recommended to set this flag to True
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+        
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
-        
+
+        #massage the inputs a little and assign
+        #to attributes for access later if desired
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.Index1=abs(Index1)
@@ -742,9 +811,11 @@ class Spectrum:
         self.Expfactor=Expfactor/1e-3
         self.Index2=Index2
 
+        #set a couple more, useful attributes
         self.model_name='PLSuperExpCutoff2'
         self.norm_par='Prefactor'
 
+        #make a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -760,15 +831,49 @@ class Spectrum:
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
                      'scale':1,'value':self.Index2})
 
+        #create the spectrum document element
         self.build()
 
     def PLSuperExpCutoff3(self,Prefactor=1e-12,IndexS=2,Scale=1000,Expfactor2=2,Index2=1,
                           Prefactor_free=True,IndexS_free=True,Expfactor2_free=True,Index2_free=False,
                           Scale_free=False,model=None):
+        '''
+        create parameter dictionaries for the PLSuperExpCutoff3 model and then build
+        spectrum parameter element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of the Prefactor parameter, in units of MeV**-1 cm**-2 s**-1
+        IndexS - float
+            value of the IndexS parameter, uses the E**(-IndexS) convention
+        Scale - float
+            value of the Scale parameter, in units of MeV
+        Expfactor2 - float
+            value of the Cutoff parameter, in units of MeV
+        Index2 - float
+            value of the Index2 parameter (the exponential index)
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        IndexS_free - bool
+            flag to set the Index1 parameter free
+        Expfactor2_free - bool
+            flag to set the Cutoff parameter free
+        Index2_free - bool
+            flag to set the Index2 parameter free
+        Scale_free - bool
+            flag to set the Scale parameter free, NOTE: it is not
+            recommended to set this flag to True
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+        
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
-        
+
+        #massage the inputs a bit and assign to
+        #attributes for access later if desired
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.IndexS=abs(IndexS)
@@ -776,9 +881,11 @@ class Spectrum:
         self.Expfactor2=Expfactor2
         self.Index2=Index2
 
+        #make some additional, useful attributes
         self.model_name='PLSuperExpCutoff3'
         self.norm_par='Prefactor'
 
+        #create a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -794,25 +901,61 @@ class Spectrum:
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
                      'scale':1,'value':self.Index2})
 
+        #create the spectrum document element
         self.build()
 
     def PLSuperExpCutoff4(self,Prefactor=1e-12,IndexS=2,Scale=1000,ExpfactorS=1,Index2=1,
                           Prefactor_free=True,IndexS_free=True,ExpfactorS_free=True,Index2_free=False,
                           Scale_free=False,model=None):
+        '''
+        create parameter dictionaries for the PLSuperExpCutoff4 model and then build
+        spectrum parameter element
+
+        Parameters
+        ----------
+        Prefactor - float
+            value of the Prefactor parameter, in units of MeV**-1 cm**-2 s**-1
+        Indexs - float
+            value of the IndexS parameter, uses the E**(-IndexS) convention
+        Scale - float
+            value of the Scale parameter, in units of MeV
+        ExpfactorS - float
+            value of the Cutoff parameter, in units of MeV
+        Index2 - float
+            value of the Index2 parameter (the exponential index)
+        Prefactor_free - bool
+            flag to set the Prefactor parameter free
+        IndexS_free - bool
+            flag to set the IndexS parameter free
+        ExpfactorS_free - bool
+            flag to set the Cutoff parameter free
+        Index2_free - bool
+            flag to set the Index2 parameter free
+        Scale_free - bool
+            flag to set the Scale parameter free, NOTE: it is not
+            recommended to set this flag to True
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+        
         #some checks on the inputs
         if Prefactor<0 or Scale<=0 or Index2<0:
             raise ValueError("Input parameters invalid, at least one of Prefactor, Scale, or Index2 is negative or zero.")
-        
+
+        #massage the inputs a little and then assign to
+        #attributes for later access if desired
         self.Prefactor_scale=10**np.floor(np.log10(Prefactor))
         self.Prefactor=Prefactor/self.Prefactor_scale
         self.IndexS=abs(IndexS)
         self.Scale=Scale
         self.ExpfactorS=ExpfactorS/1e-1
         self.Index2=Index2
-
+        
+        #assign a couple more useful attributes
         self.model_name='PLSuperExpCutoff4'
         self.norm_par='Prefactor'
 
+        #create a dictionary for each parameter
         self.parameters=[{'free':int(Prefactor_free),'name':'Prefactor','minimum':0,
                      'maximum':1e6,'scale':self.Prefactor_scale,'value':self.Prefactor}]
 
@@ -828,23 +971,54 @@ class Spectrum:
         self.parameters.append({'free':int(Index2_free),'name':'Index2','minimum':0,'maximum':max(5,self.Index2*1.5),
                      'scale':1,'value':self.Index2})
 
+        #create the spectrum document element
         self.build()
 
     def LogParabola(self,norm=1e-9,alpha=1,beta=2,Eb=300,
                     norm_free=True,alpha_free=True,beta_free=True,Eb_free=False,model=None):
+        '''
+        create parameter dictionaries for the LogParabola model and then build
+        spectrum document element
+
+        Parameters
+        ----------
+        norm - float
+            value of the norm paramter, in units of MeV**-1 cm**-2 s**-1
+        alpha - float
+            value of the alpha parameter
+        beta - float
+            value of the beta parameter
+        Eb - float
+            value of the Eb parameter, in units of MeV
+        norm_free - bool
+            flag to set the norm parameter free
+        alpha_free - bool
+            flag to set the alpha parameter free
+        beta_free - bool
+            flag to set the beta paramter free
+        Eb_free - bool
+            flag to set the Eb parameter free
+        model - None-type or str
+            model name, not used, included only for **kwargs compatability
+        '''
+        
         #some checks on the inputs
         if norm<0 or alpha<0 or Eb<=0:
             raise ValueError("Input parameters invalid, at least one of norm, alpha, or Eb is negative or zero.")
-        
+
+        #massage in the inputs a bit and then assign to
+        #attributes for later access if desired
         self.norm_scale=10**np.floor(np.log10(norm))
         self.norm=norm/self.norm_scale
         self.alpha=alpha
         self.beta=beta
         self.Eb=Eb
 
+        #asign some more useful attributes
         self.model_name='LogParabola'
         self.norm_par='norm'
 
+        #create a dictionary for each parameter
         self.parameters=[{'free':int(norm_free),'name':'norm','minimum':0,
                      'maximum':1e6,'scale':self.norm_scale,'value':self.norm}]
 
@@ -857,6 +1031,7 @@ class Spectrum:
         self.parameters.append({'free':int(Eb_free),'name':'Eb','minimum':min(10,self.Eb*0.9),
                            'maximum':max(500000,self.Eb*1.5),'scale':1,'value':self.Eb})
 
+        #create the spectrum document element
         self.build()
 
     def Gaussian(self,Prefactor=1e-9,Mean=7e4,Sigma=1e3,Prefactor_free=True,
