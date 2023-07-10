@@ -6,7 +6,7 @@
 #previous interactive python session code would import from
 #this package and not make4FGLxml, this would remain
 #as a command line interface
-from lat_source_model import SourceList
+from LATSourceModel import SourceList
 
 def mybool(Input):
     '''
