@@ -1190,8 +1190,9 @@ class Spectrum:
 
         Parameters
         ----------
-        spectrum_file - str or Path-like
-            path to or name of the DM spectrum file
+        spectrum_file - str
+            full path to the DM spectrum file, in this case a string is desired
+            over a Path-like
         norm - float
             value of the norm parameter
         sigmav - float
@@ -1220,7 +1221,7 @@ class Spectrum:
             model name, not used, included only for **kwargs compatability
         '''
 
-        self.spectrum_file=spectrum_file
+        self.spectrum_file=str(spectrum_file)
 
         #quick check on inupts
         if norm<0:
@@ -1275,8 +1276,9 @@ class Spectrum:
 
         Parameters
         ----------
-        spectrum_file - str or Path-like
-            path to or name of spectrum file
+        spectrum_file - str
+            full path to the spectrum file, in this case a string is desired over
+            a Path-like
         Normalization - float
             value of the normalization parameter
         apply_edisp - str or bool or int or float
@@ -1309,7 +1311,7 @@ class Spectrum:
 
         #assign values to some potentially helpful attributes
         self.Normalization=Normalization
-        self.spectrum_file=spectrum_file
+        self.spectrum_file=str(spectrum_file)
         self.apply_edisp=apply_edisp.lower()
 
         self.model_name='FileFunction'
@@ -1401,7 +1403,7 @@ class Spatial:
         self.get_function_dictionary()
 
         #do some checks on the input
-        if spatial_model not in self.funtions.keys():
+        if spatial_model not in self.functions.keys():
             raise ValueError('{spatial_model = } not implemented')
         
         self.spatial_model=spatial_model
@@ -1553,8 +1555,9 @@ class Spatial:
 
         Parameters
         ----------
-        spatial_file - str or Path-like
-            path to or name of spatial_file
+        spatial_file - str
+            full path to the spatial_file, in this case a string is desired
+            over a Path-like
         Prefactor - str or float
             value of Prefactor parameter, units of MeV**-1 sr**-1 cm**-2 s**-1
         spatial_model - None-type or str
@@ -1567,7 +1570,7 @@ class Spatial:
             raise ValueError(f'Input of {Prefactor = :e} is invalid, must be >=0')
 
         #assign inputs to some attributes for access later
-        self.spatial_file=spatial_file
+        self.spatial_file=str(spatial_file)
         self.Prefactor=Prefactor
 
         #assign the necessary attributes to the spatialModel document element
@@ -1610,8 +1613,9 @@ class Spatial:
 
         Paramters
         ---------
-        spatial_file - str or Path-like
-            path to or name of spatial_file file
+        spatial_file - str
+            full path to the spatial_file file, in this case a string is
+            desired over a Path-like
         Normalization - float or str
             value of the Normalization parameter
         spatial_model - None-type or str
@@ -1625,7 +1629,7 @@ class Spatial:
 
         #assign inputs to attributes for possible access
         #later if desired
-        self.spatial_file=spatial_file
+        self.spatial_file=str(spatial_file)
         self.Normalization=float(Normalization)
 
         #set the necessary attributes
