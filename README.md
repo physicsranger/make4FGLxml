@@ -1,6 +1,8 @@
 # make4FGLxml
 An updated version of the make4FGLxml script, including a GUI, used to produce source region models for analysis of Fermi LAT data.  If you have previous experience with the script (pre-GitHub), consider this version 1.10.0 (or v01r10 using my old syntax).
 
+(Note, I am working on restructuring the code such that much of it will be installed via pip and the make4FGLxml.py script will become simply a quick command line wrapper)
+
 The main changes are to improve the readability of the code and make it more elegant (though elegence is a matter of opinion).  If you are already familiar with the code, the [previous instructions](https://fermi.gsfc.nasa.gov/ssc/data/analysis/user/readme_make4FGLxml.txt) are still mostly valid, with the major changes being in some argument names and that the custom class is called SourceList instead of srcList.  Additionally, previously the sources were grouped by distance from the ROI center with comments inserted to denote the "distance block", but only when using the FITS catalog.  Currently, the script no longer does this, but it does sort the sources by distance from the ROI center, even if you're using the XML version of the catalog, which it didn't do previously.
 
 Recently added functionality allows for the user to add sources not in the 4FGL catalog to the XML model after it has been created (currently, this function is only available if coded into a python script or in an interactive python session).
