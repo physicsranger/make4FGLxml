@@ -4,6 +4,10 @@ import numpy as np
 
 from xml.dom import minidom
 
+from pathlib import Path
+
+import warnings
+
 #a list of the available spectral models
 #note, this includes all listed on the FSSC
 #but the more common models are 'up front'
@@ -158,7 +162,7 @@ def build_region(region_file_name,sources):
 
     Parameters
     ----------
-    region_file_name - str or path-like
+    region_file_name - str or Path-like
         name of output file, if not the full path then it will
         be created in the current directory
     sources - dict
@@ -170,28 +174,92 @@ def build_region(region_file_name,sources):
     shape={'PLSuperExpCutoff':'cross','LogParabola':'diamond',
         'PowerLaw':'circle'}
     color=('magenta','green')
-    
-    with open(region_file_name,'w') as region_file:
-        region_file.write('# Region file format: DS9\n')
-        region_file.write('# Created by make4FGLxml\n')
-        region_file.write('global font="roman 10 normal" move =0\n')
+
+    region_lines='# Region file format: DS9\n'
+    region_lines+='# Created by make4FGLxml\n'
+    region_lines+='global font="roman 10 normal" move =0\n'
+
+    #cycle through the sources dictionary
+    for source_name in sources.keys():
+        source=sources.get(source_name)
+        entry=f"J2000;point({source['RA']:.3f},{source['DEC']:.3f}) # point = "
+            
+        #check if source is extended or not
+        if source['Extended']:
+            entry+=f"box 18 color = {color[source['free']]} "
+            
+        else:
+            entry+=f"{shape[source['spectrum']['model'].strip('2345')]} 15 "
+            entry+=f"color = {color[source['free']]} "
+            
+        #add the name and write to file
+        entry+=f"text={ {source_name} }\n"
+        region_lines+=entry
+
+    Path(region_file_name).write_text(region_lines)
+
+def add_to_reg_file(region_file,source_name,source_spatial,spectral_model,extended=False,new_region=None):
+    '''
+    function to add a new source to an existing region file and either update the file
+    or create a new file
+
+    Paramters
+    ---------
+    region_file - str or Path-like
+        name of or path to ds9-style .reg file to be updated
+    source_name - str
+        name of source to be added
+    source_spatial - dict
+        dictionary with spatial information, namely RA and DEC which should be the
+        right ascension and declination (J2000) of the source to be added
+    spectral_model - str
+        name of the spectral model used for the source to be added
+    extended - bool
+        flag to indicate if the source to be added is an extended source (True) or
+        a point source (False)
+    new_region - str, Path-like, or None-type
+        name of or path to the new ds9-style .reg file to be created, if None-type then
+        the existing region_file will be overwritten
+    '''
+
+    #check that the spatial info has RA and DEC
+    if not {'RA','DEC'}.issubset(source_spatial.keys()):
+        warnings.warn('Input source spatial information does not have RA and/orDEC.\
+ Not adding to 
+
+    #check if the file passed in actually exists
+    elif not Path(region_file).exists():
+        warnings.warn(f'Input {str(region_file)} does not exists.')
+
+    else:
+        new_line=f"J2000;point({source_spatial['RA']:.3f},{source_spatial['DEC']:.3f}) # point = "
+
+        #follow the point style and size conventions, allowing for spectral models not
+        #used in 4FGL, and set the color to cyan to distinguish non-4FGL sources
+        if extended:
+            new_line+=f"box 18 color = cyan "
+
+        else:
+            shape='cross' if spectral_model.strip('2345')=='PLSuperExponentialCutoff' else \
+                  'diamond' if spectral_model=='LogParabola' else \
+                  'circle' if spectral_model.strip('2')=='PowerLaw' else \
+                  'x'
+
+            new_line+=f"{shape} 15 color = cyan "
+
+        new_line+=f"text = { {source_name} }\n"
         
-        #cycle through the sources dictionary
-        for source_name in sources.keys():
-            source=sources.get(source_name)
-            entry=f"J2000;point({source['RA']:.3f},{source['DEC']:.3f}) # point = "
-            
-            #check if source is extended or not
-            if source['Extended']:
-                entry+=f"box 18 color = {color[source['free']]} "
-            
-            else:
-                entry+=f"{shape[source['spectrum']['model'].strip('2345')]} 15 "
-                entry+=f"color = {color[source['free']]} "
-            
-            #add the name and write to file
-            entry+=f"text={ {source_name} }\n"
-            region_file.write(entry)
+        #cet the current .reg file lines
+        region_lines=Path(region_file).read_text(encoding='UTF-8')
+
+        #add the new source at the end (each line ends with a newline character)
+        region_lines+=new_line
+
+        #check if new_region is None-type or not
+        new_region=new_region if new_region is not None else region_file
+
+        #write out the .reg info with the new source added
+        Path(new_region).write_text(region_lines)
 
 def valid_spatial_input(spatial_info):
     '''

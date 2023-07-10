@@ -1401,7 +1401,7 @@ class Spatial:
         self.get_function_dictionary()
 
         #do some checks on the input
-        if spatial_model not in self.funtions.keys():
+        if spatial_model not in self.functions.keys():
             raise ValueError('{spatial_model = } not implemented')
         
         self.spatial_model=spatial_model
