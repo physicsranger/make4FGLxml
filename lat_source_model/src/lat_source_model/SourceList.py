@@ -1,13 +1,15 @@
 #utilities imports
-from lat_source_model import (
-    angular_separation,
-    get_ROI_from_event_file,
-    build_region,
-    valid_spatial_input,
-    valid_spectrum_input)
+from lat_source_model.utilities import (
+        angular_separation,
+        get_ROI_from_event_file,
+        build_region,
+        valid_spatial_input,
+        valid_spectrum_input)
 
 #model_components imports
-from lat_source_model import Spectrum,Spatial
+from lat_source_model.model_components import (
+        Spectrum,
+        Spatial)
 
 import os
 
