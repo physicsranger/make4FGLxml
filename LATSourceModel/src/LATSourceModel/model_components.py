@@ -1,6 +1,6 @@
 from xml.dom import minidom
 
-from lat_source_model.utilities import parameter_element
+from LATSourceModel.utilities import parameter_element
 
 import os
 
