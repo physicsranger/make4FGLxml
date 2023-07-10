@@ -918,7 +918,7 @@ class SourceList:
 
         #call the add_source method
         self.add_source(source_name,
-                        {'RA':RA,'DEC':DEC,'spatial_model':'SkyDir',
+                        {'RA':RA,'DEC':DEC,'spatial_model':'SkyDir'},
                          spectrum_info,diffuse=False,
                          new_model_name=new_model_name,overwrite=overwrite)
 
