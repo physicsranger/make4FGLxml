@@ -6,8 +6,8 @@ __pycache__/
 *.reg
 
 #ignore some pyInstaller stuff
-dist
-build
+dist/
+build/
 *.spec
 *.hypothesis
 

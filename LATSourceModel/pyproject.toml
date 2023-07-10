@@ -1,0 +1,26 @@
+[build-system]
+
+requires = ["setuptools","wheel"]
+
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "LATSourceModel"
+authors = [
+    {name = "Tyrel Johnson", email = "tyrel.j.johnson@gmail.com"},
+]
+version = "1.10.0"
+description = "A set of functions and classes to build spatial-spectral models for analysis of Fermi LAT gamma-ray data."
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.4" #for pathlib
+license = {text = "GPL-3.0"}
+classifiers = [
+"Programming Language :: Python :: 3",
+"License :: OSI Approved :: GNU General Public License (GPLv3)",
+"Operating System :: OS Independent"
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "astropy"
+]
