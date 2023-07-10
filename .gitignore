@@ -1,15 +1,31 @@
-#ignore some basic stuff
+# heavily relies on https://github.com/github/gitignore/blob/main/Python.gitignore
+# though not completely copied
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
 
+# C extensions
+*.so
 #ignore .xml and .reg files from testing/working in repo directory
 *.xml
 *.reg
 
 #ignore some pyInstaller stuff
+#plus Distribution/packaging
+.Python
 dist/
+develop-eggs/
 build/
+eggs/
+.eggs/
+wheels/
+
+*.egg-info/
+*.egg
 *.spec
 *.hypothesis
+*.manifest
 
 #ignore possible mac files
 *.DS_Store
