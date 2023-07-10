@@ -37,7 +37,7 @@ See the two example usages below:
 ```python
 #using an event file to get the ROI information and the FITS version of the catalog
 #and not specifying either optional parameter
-source_list=SourceList(catalog_file='/some/path/to/gll_psc_v31.fit','my_event_file.fits')
+source_list=SourceList(catalog_file='/some/path/to/gll_psc_v31.fit',ROI='my_event_file.fits')
 
 #or...
 
