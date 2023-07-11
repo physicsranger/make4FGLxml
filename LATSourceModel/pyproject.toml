@@ -9,7 +9,7 @@ name = "LATSourceModel"
 authors = [
     {name = "Tyrel Johnson", email = "tyrel.j.johnson@gmail.com"},
 ]
-version = "1.10.01"
+version = "1.10.2"
 description = "A set of functions and classes to build spatial-spectral models for analysis of Fermi LAT gamma-ray data."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.4" #for pathlib
