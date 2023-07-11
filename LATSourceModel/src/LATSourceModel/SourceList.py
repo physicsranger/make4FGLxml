@@ -4,7 +4,8 @@ from LATSourceModel.utilities import (
         get_ROI_from_event_file,
         build_region,
         valid_spatial_input,
-        valid_spectrum_input)
+        valid_spectrum_input,
+        add_to_reg_file)
 
 #model_components imports
 from LATSourceModel.model_components import (
@@ -24,6 +25,8 @@ from functools import reduce
 import astropy.io.fits as pyfits
 
 from xml.dom import minidom
+
+from pathlib import Path
 
 class SourceList:
     '''
@@ -117,19 +120,28 @@ class SourceList:
         '''
         
         #some sanity checks on input values
-        if not os.path.exists(catalog_file):
+        ##if not os.path.exists(catalog_file):
+        if not Path(catalog_file).exists():
             raise FileNotFoundError(2,'Could not access catalog file',catalog_file)
         
-        if os.path.exists(output_name):
-            warnings.warn(f'Region XML model {output_name} already exists, will be overwritten\
- (note, some systems may be case-insensitive).')
+        ##if os.path.exists(output_name):
+            ##warnings.warn(f'Region XML model {output_name} already exists, will be overwritten\
+ ##(note, some systems may be case-insensitive).')
 
         if DR not in [1,2,3,4]:
             raise ValueError(f'{DR = } is an invalid choice of data release, must be 1, 2, 3, or 4.')
 
-        self.catalog_file=catalog_file
-        self.output_name=os.path.join(write_directory,output_name)
-        self.write_directory=write_directory
+        self.catalog_file=Path(catalog_file)
+        ##self.output_name=os.path.join(write_directory,output_name)
+        ##self.write_directory=write_directory
+
+        self.write_directory=Path(write_directory)
+        self.output_name=self.write_directory/output_name
+
+        if self.output_name.exists():
+            warnings.warn(f'REgion XML model {str(self.output_name)} already exists, will be\
+ overwritten if you call the make_model method.')
+        
         self.DR=DR
         self.variability_threshold=27.69 if DR==4 \
                               else 24.725 if DR==3 \
@@ -145,7 +157,8 @@ class SourceList:
 
         #or from the header of an eventfile
         #passed in
-        elif os.path.exists(ROI):
+        ###elif os.path.exists(ROI):
+        elif Path(ROI).exists():
             self.ROI=get_ROI_from_event_file(ROI)
 
         #may need to rethink the way this else
@@ -239,21 +252,14 @@ class SourceList:
             becomes _4FGLJ####.#+####)
         '''
 
-        if os.path.dirname(galactic_file)=='':
-            #if self.fermi_dir is None:
+        ##if os.path.dirname(galactic_file)=='':
+        if str(Path(galactic_file).parent)=='.':
+            #for writing to the XML file, working with a string is easier
             galactic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',galactic_file])
-            #not sure if we should hardcode the path or not, makes it difficult if trying to work
-            #with different fermitools conda installs
-            #else:
-            #    galactic_file=os.path.join(self.fermi_dir,'refdata','fermi','galdiffuse',galactic_file)
 
-        if os.path.dirname(isotropic_file)=='':
-            #if self.fermi_dir is None:
+        ##if os.path.dirname(isotropic_file)=='':
+        if str(Path(isotropic_file).parent)=='.':
             isotropic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',isotropic_file])
-            #not sure if we should hardcode the path or not, makes it difficult if trying to work
-            #with different fermitools conda installs
-            #else:
-            #    isotropic_file=os.path.join(self.fermi_dir,'refdata','fermi','galdiffuse',isotropic_file)
 
         #create attributes associated with diffuse
         #emission components
@@ -296,17 +302,24 @@ class SourceList:
         if make_region:
             #if name not specified, construct from output_name value
             if region_file is None or region_file=='':
-                region_file=os.path.basename(self.output_name).split('.')[:-1]
-                #allow that '.' might be in the name beyond just giving the extenstion
-                region_file=reduce(lambda s1,s2:s1+s2,region_file).join(['ROI_','.reg'])
+                ##region_file=os.path.basename(self.output_name).split('.')[:-1]
+                ###allow that '.' might be in the name beyond just giving the extenstion
+                ##region_file=reduce(lambda s1,s2:s1+s2,region_file).join(['ROI_','.reg'])
+
+                #change the suffix
+                region_file=self.output_name.with_suffix('.reg').name
+
+                #rename the file, prepending 'ROI_', working with a string at this point
+                region_file='ROI_'+region_file
 
             #construct the full path to the file
-            self.region_file=os.path.join(self.write_directory,region_file)
+            ###self.region_file=os.path.join(self.write_directory,region_file)
+            self.region_file=self.write_directory/region_file
 
             #and create the .reg file
             print('Building ds9-style region file',end='...')
             build_region(self.region_file,self.sources)
-            print(f'done!\nFile saved as {self.region_file}.')
+            print(f'done!\nFile saved as {str(self.region_file)}.')
     
     def create_XML_model(self):
         '''
@@ -316,9 +329,10 @@ class SourceList:
         method to create the XML model file
         '''
         
-        print(f'Creating spatial and spectral model from the 4FGL DR-{self.DR} catalog: {self.catalog_file}.')
+        print(f'Creating spatial and spectral model from the 4FGL DR-{self.DR} catalog: {str(self.catalog_file)}.')
         
-        if os.path.basename(self.catalog_file).split('.')[-1].lower()=='xml':
+        ##if os.path.basename(self.catalog_file).split('.')[-1].lower()=='xml':
+        if self.catalog_file.suffix.lower()=='.xml':
             self.get_sources_xml()
         else:
             self.get_sources_fits()
@@ -481,8 +495,11 @@ class SourceList:
         out_string=filter(lambda s: len(s) and not s.isspace(),
                   output_xml.toprettyxml(' ').splitlines(True))
 
-        with open(self.output_name,'w') as output_file:
-            output_file.write(''.join(out_string))
+        ###with open(self.output_name,'w') as output_file:
+        ##with self.output_name.open('w') as output_file:
+           ##output_file.write(''.join(out_string))
+
+        self.output_name.write_text(''.join(out_string))
 
         #print information about the model for the user
         if self.force_point_sources:
@@ -505,7 +522,9 @@ class SourceList:
         '''
 
         #read in the catalog
-        catalog=minidom.parse(self.catalog_file)
+        #so far as I can determine, minidom.parse cannot handle Path objects
+        #cast as a string first
+        catalog=minidom.parse(str(self.catalog_file))
         catalog_sources=np.array(catalog.getElementsByTagName('source'))
 
         #traverse through the sources once, just to get positional information
@@ -769,7 +788,8 @@ class SourceList:
                      'DEC':row.DEC})])
 
     def add_source(self,source_name,spatial_info,spectrum_info,
-                   diffuse=False,new_model_name=None,overwrite=False):
+                   diffuse=False,new_model_name=None,overwrite=False,
+                   update_reg=True,old_reg_file=None,new_reg_file=None):
         '''
         method to add a source, not in the 4FGL catalog, to an existing
         XML model
@@ -792,28 +812,44 @@ class SourceList:
             file name for new XML model, if not specified the existing
             model will be overwritten if the overwrite parameter is True
         overwrite : bool
-            flag to overwrite existing file of same name
+            flag to overwrite existing file of same name, only applies to the
+            XML model file, not the optional .reg file
+        update_reg : bool
+            flag to update the ds9-style .reg file with the new source
+        old_reg_file : str, Path-like, or None-type
+            name of or path to current ds9-style .reg file, if None-type,
+            will check if SourceList has region_file attribute and use that
+        new_reg_file : str, Path-like, or None-type
+            name of or path to new ds9-style .reg file with new source
+            added, if None-type will attempt to overwrite old_reg_file
         '''
         
         #first, do a check on the model to make sure it exists
-        if not os.path.exists(self.output_name):
-            raise RuntimeError(f'{self.output_name} has not been created yet,\
+        ##if not os.path.exists(self.output_name):
+        if not self.output_name.exists():
+            raise RuntimeError(f'{str(self.output_name)} has not been created yet,\
  cannot use add_source until make_model has been successfully run.')
 
         #assume the model is in the same directory as the
         #existing model, add the full path information
         if new_model_name is not None:
-            if os.path.dirname(new_model_name)=='':
-                new_model_name=os.path.join(\
-                    os.path.dirname(self.output_name),
-                    new_model_name)
+            ##if os.path.dirname(new_model_name)=='':
+            if str(Path(new_model_name).parent)=='.':
+                ##new_model_name=os.path.join(\
+                    ##os.path.dirname(self.output_name),
+                    ##new_model_name)
+                new_model_name=self.output_name.parent/new_model_name
+                
                 warnings.warn('Assuming same save directory as main model.')
+            elif not isinstance(new_model_name,Path):
+                new_model_name=Path(new_model_name)
 
-            if os.path.exists(new_model_name):
+            ##if os.path.exists(new_model_name):
+            if new_model_name.exists():
                 if overwrite:
-                    warnings.warn(f'File {new_model_name} exists, will be overwritten.')
+                    warnings.warn(f'File {str(new_model_name)} exists, will be overwritten.')
                 else:
-                    raise RuntimeError(f'File {new_model_name} exists but overwrite flag set to False.')
+                    raise RuntimeError(f'File {str(new_model_name)} exists but overwrite flag set to False.')
 
         #if a name isn't provided, we will overwrite the existing
         #file, but only if overwrite is True
@@ -867,7 +903,7 @@ class SourceList:
 
         #now cycle through sources already in the model and
         #add them to the new XML document
-        current_model=minidom.parse(self.output_name)
+        current_model=minidom.parse(str(self.output_name))
         current_sources=np.array(current_model.getElementsByTagName('source'))
 
         for source in current_sources:
@@ -877,19 +913,56 @@ class SourceList:
         out_string=filter(lambda s: len(s) and not s.isspace(),
                   output_xml.toprettyxml(' ').splitlines(True))
 
-        with open(new_model_name,'w') as output_file:
-            output_file.write(''.join(out_string))
+        ##with open(new_model_name,'w') as output_file:
+            ##output_file.write(''.join(out_string))
 
-        print(f'{source_name} added to model, saved as {new_model_name}')
+        new_model_name.write_text(''.join(out_string))
+
+        print(f'{source_name} added to model, saved as {str(new_model_name)}')
 
         self.output_name=new_model_name
         print('SourceList object attribute "output_name" now points to new file')
+
+        #now, if requested, update the ds9-style .reg file
+        if update_reg:
+            #need to do some sanity checks first
+            
+            #make sure we have a .reg file to start from
+            if old_reg_file is None and not hasattr(self,'region_file'):
+                warnings.warn('Requested to update ds9-style .reg file but old_reg_file\
+ not specified and could not determine file name from SourceList object.\nWill not update\
+ the region file.')
+
+            #if supplied, make sure old_reg_file exists
+            elif old_reg_file is not None and not Path(old_reg_file).exists():
+                warnings.warn('Requested to update the ds9-style .reg file but existing file\
+{str(old_reg_file)} could not be found.\nWill not update the region file.')
+
+            #make sure a position was supplied
+            elif not {'RA','DEC'}.issubset(spatial_info.keys()):
+                warnings.warn('Requested to update ds9-style .reg file but the input\
+ spatial information does not have RA and DEC information.\nWill not update the region file.')
+
+            #should be good to update the region file
+            else:
+                old_reg_file=Path(old_reg_file) if old_reg_file is not None else \
+                    self.region_file
+
+                add_to_reg_file(region_file=old_reg_file,
+                                source_name=source_name,
+                                source_spatial=spatial_info,
+                                spectral_model=spectrum_info.get('model'),
+                                extended=diffuse,
+                                new_region=new_reg_file)
+                    
 
     #a convenience method to add a point source easily
     #will call the add_source method
     #spectrum_model can be the name of the model or a dictionary with
     #the necessary model info
-    def add_point_source(self,source_name,RA,DEC,spectrum_model='PowerLaw',new_model_name=None,overwrite=False):
+    def add_point_source(self,source_name,RA,DEC,spectrum_model='PowerLaw',
+                         new_model_name=None,overwrite=False,update_reg=True,
+                         old_reg_file=None,new_reg_file=None):
         '''
         method to add a point source, not in the 4FGL catalog,
         to an existing XML model, this is a convenience method
@@ -908,7 +981,16 @@ class SourceList:
             file name for new XML model, if not specified the existing
             model will be overwritten if the overwrite parameter is True
         overwrite : bool
-            flag to overwrite existing file of same name
+            flag to overwrite existing file of same name, only applies to the
+            XML model file, not the optional .reg file
+        update_reg : bool
+            flag to update the ds9-style .reg file with the new source
+        old_reg_file : str, Path-like, or None-type
+            name of or path to current ds9-style .reg file, if None-type,
+            will check if SourceList has region_file attribute and use that
+        new_reg_file : str, Path-like, or None-type
+            name of or path to new ds9-style .reg file with new source
+            added, if None-type will attempt to overwrite old_reg_file
         '''
 
         #determine what type of spectrum_model input we have
@@ -921,5 +1003,10 @@ class SourceList:
         #call the add_source method
         self.add_source(source_name,
                         {'RA':RA,'DEC':DEC,'spatial_model':'SkyDir'},
-                         spectrum_info,diffuse=False,
-                         new_model_name=new_model_name,overwrite=overwrite)
+                         spectrum_info,
+                        diffuse=False,
+                         new_model_name=new_model_name,
+                        overwrite=overwrite,
+                        update_reg=update_reg,
+                        old_reg_file=old_reg_file,
+                        new_reg_file=new_reg_file)
