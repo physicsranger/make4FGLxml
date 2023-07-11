@@ -121,7 +121,7 @@ class SourceList:
         
         #some sanity checks on input values
         ##if not os.path.exists(catalog_file):
-        if not Path(catalog_file).exists()
+        if not Path(catalog_file).exists():
             raise FileNotFoundError(2,'Could not access catalog file',catalog_file)
         
         ##if os.path.exists(output_name):
@@ -158,7 +158,7 @@ class SourceList:
         #or from the header of an eventfile
         #passed in
         ###elif os.path.exists(ROI):
-        elif Path(ROI).exists()
+        elif Path(ROI).exists():
             self.ROI=get_ROI_from_event_file(ROI)
 
         #may need to rethink the way this else
@@ -258,7 +258,7 @@ class SourceList:
             galactic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',galactic_file])
 
         ##if os.path.dirname(isotropic_file)=='':
-        if str(Path(galactic_file).parent)=='.':
+        if str(Path(isotropic_file).parent)=='.':
             isotropic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',isotropic_file])
 
         #create attributes associated with diffuse
@@ -332,7 +332,7 @@ class SourceList:
         print(f'Creating spatial and spectral model from the 4FGL DR-{self.DR} catalog: {str(self.catalog_file)}.')
         
         ##if os.path.basename(self.catalog_file).split('.')[-1].lower()=='xml':
-        if self.catalog_file.suffix.lower()=='xml':
+        if self.catalog_file.suffix.lower()=='.xml':
             self.get_sources_xml()
         else:
             self.get_sources_fits()
@@ -845,7 +845,7 @@ class SourceList:
                 new_model_name=Path(new_model_name)
 
             ##if os.path.exists(new_model_name):
-            if new_model_name.exists()
+            if new_model_name.exists():
                 if overwrite:
                     warnings.warn(f'File {str(new_model_name)} exists, will be overwritten.')
                 else:
@@ -934,7 +934,7 @@ class SourceList:
  the region file.')
 
             #if supplied, make sure old_reg_file exists
-            elif not Path(old_reg_file).exists():
+            elif old_reg_file is not None and not Path(old_reg_file).exists():
                 warnings.warn('Requested to update the ds9-style .reg file but existing file\
 {str(old_reg_file)} could not be found.\nWill not update the region file.')
 
@@ -1008,5 +1008,5 @@ class SourceList:
                          new_model_name=new_model_name,
                         overwrite=overwrite,
                         update_reg=update_reg,
-                        old_reg_file=old_reg_file
+                        old_reg_file=old_reg_file,
                         new_reg_file=new_reg_file)

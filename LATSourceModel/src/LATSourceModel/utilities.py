@@ -225,7 +225,7 @@ def add_to_reg_file(region_file,source_name,source_spatial,spectral_model,extend
     #check that the spatial info has RA and DEC
     if not {'RA','DEC'}.issubset(source_spatial.keys()):
         warnings.warn('Input source spatial information does not have RA and/orDEC.\
- Not adding to 
+ Not adding source to region file.')
 
     #check if the file passed in actually exists
     elif not Path(region_file).exists():
