@@ -9,7 +9,7 @@ name = "LATSourceModel"
 authors = [
     {name = "Tyrel Johnson", email = "tyrel.j.johnson@gmail.com"},
 ]
-version = "1.10.3"
+version = "1.10.4"
 description = "A set of functions and classes to build spatial-spectral models for analysis of Fermi LAT gamma-ray data."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.4" #for pathlib
@@ -26,10 +26,4 @@ dependencies = [
 ]
 
 [project.scripts]
-make4FGLxml = "scripts:make4FGLxml:cli"
-
-#not sure if I'll need this or not
-#but I think we don't want to since scripts
-#shouldn't be a package but denoted as a folder
-#[tool.setuptools]
-#packages = ["LATSourceModel","scripts"]
+make4FGLxml = "LATSourceModel.make4FGLxml:cli"
