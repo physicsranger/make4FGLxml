@@ -271,7 +271,7 @@ class SourceList:
 
         #create attributes associated with radial boundaries
         #and check values
-        self.free_radius=(self.roi[2] if free_radius<=0 else free_radius)
+        self.free_radius=(self.ROI[2] if free_radius<=0 else free_radius)
         self.max_free_radius=(self.free_radius if max_free_radius is None else max_free_radius)
         
         if self.max_free_radius<self.free_radius:
