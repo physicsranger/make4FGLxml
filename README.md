@@ -1,13 +1,15 @@
 # make4FGLxml
-An updated version of the make4FGLxml script, including a GUI, used to produce source region models for analysis of Fermi LAT data.  If you have previous experience with the script (pre-GitHub), consider this version 1.10.0 (or v01r10 using my old syntax).
+## A command-line wrapper for the LATSourceModel package
 
-(Note, I am working on restructuring the code such that much of it will be installed via pip and the make4FGLxml.py script will become simply a quick command line wrapper)
+An updated version of the make4FGLxml.py script previously available all as a single file from the [FSSC User Contributions](https://fermi.gsfc.nasa.gov/ssc/data/analysis/user/).  This update represents a major restructuring of the code to improve performance, readability, and documentation.  The update also includes new features and eventually a GUI.
 
-The main changes are to improve the readability of the code and make it more elegant (though elegence is a matter of opinion).  If you are already familiar with the code, the [previous instructions](https://fermi.gsfc.nasa.gov/ssc/data/analysis/user/readme_make4FGLxml.txt) are still mostly valid, with the major changes being in some argument names and that the custom class is called SourceList instead of srcList.  Additionally, previously the sources were grouped by distance from the ROI center with comments inserted to denote the "distance block", but only when using the FITS catalog.  Currently, the script no longer does this, but it does sort the sources by distance from the ROI center, even if you're using the XML version of the catalog, which it didn't do previously.
+The package is used to produce XML spatial-spectral models of gamma-ray sources within a specified region of the sky for analysis of _Fermi_ LAT data.  If you have previous experience with the script (pre-GitHub), consider this version 1.10.0 (or v01r10 using my old syntax).
 
-Recently added functionality allows for the user to add sources not in the 4FGL catalog to the XML model after it has been created (currently, this function is only available if coded into a python script or in an interactive python session).
+For those familiar with earlier versions of the script, the [previous instructions](https://fermi.gsfc.nasa.gov/ssc/data/analysis/user/readme_make4FGLxml.txt) are still mostly valid, with the major changes being in some argument names, the main class is called ```SourceList``` instead of ```srcList```, the classes and functions are contained in a package called ```LATSourceModel```, and you can now add sources not in a 4FGL catalog to the source model without having to manually edit the XML file in a text editor.
 
-The script now requires the ```pandas``` module, which can easily be installed with pip or your preferred package manager.
+Previously the sources were grouped by distance from the ROI center with comments inserted to denote the "distance block", but only when using the FITS catalog.  The new version of the code still sorts the sources by distance from the ROI center (now also done if using the XML version of the catalog) but does not insert comments denoting distance blocks.
+
+The script now requires the ```pandas``` module, which can easily be installed with pip or your preferred package manager (if it isn't installed already).
 
 ---
 
