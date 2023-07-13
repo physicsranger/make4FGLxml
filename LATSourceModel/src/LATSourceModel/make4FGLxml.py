@@ -23,7 +23,7 @@ def mybool(Input):
     Returns
     -------
     bool
-        the corresponding True or False to Input
+        the True or False bool matching "Input"
     '''
     
     return {'True':True,'False':False,
@@ -88,23 +88,23 @@ def cli():
     
     parser.add_argument("-r","--free_radius",type=float,default=-1.,
                 help="Radius, in degrees, from ROI center beyond which all source parameters should be fixed,\
-will default to selection radius.")
+ will default to selection radius.")
     
     parser.add_argument("-R","--max_free_radius",type=float,default=None,
                 help="Absolute maximum radius, in degrees, from ROI center beyond which all source parameters should be fixed,\
-even variable sources will not be freed beyond this radius, defaults to free_radius value.")
+ even variable sources will not be freed beyond this radius, defaults to free_radius value.")
     
     parser.add_argument("-ER","--extra_radius",type=float,default=10.,
                 help="Radius beyond event file ROI out to which sources will be included in the model with all parameters fixed,\
-default is 10, good for analyses starting around a few hundred MeV, can be decreased for high energy only fits.")
+ default is 10, good for analyses starting around a few hundred MeV, can be decreased for high energy only fits.")
     
     parser.add_argument("-s","--sigma_to_free",type=float,default=5.,
                 help="Average significance below which all source parameters are fixed, defaults to 5.\
-Note, if using the 3FGL catalog xml file as input, this is actually a cut on TS, so adjust accordingly.")
+ Note, if using the 3FGL catalog xml file as input, this is actually a cut on TS, so adjust accordingly.")
     
     parser.add_argument("-v","--variable_free",type=mybool,default=True,
                 help="Flag to set normalization of significantly variable sources,\
-even if source is beyond radius limit or below TS limit, default is True.",
+ even if source is beyond radius limit or below TS limit, default is True.",
                 choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
     
     parser.add_argument("-p","--force_point_sources",type=mybool,default=False,
@@ -121,24 +121,27 @@ even if source is beyond radius limit or below TS limit, default is True.",
 
     parser.add_argument('-rf','--region_file',type=str,default='',
                 help='Name of output .reg file, if make_region set to true.  Will default to\
-ROI_"output_name".reg if not specified.')
+ ROI_"output_name".reg if not specified.')
     
     parser.add_argument("-GIF","--galactic_index_free",type=mybool,default=True,
                 help="Flag to use a power-law modification to the Galactic diffuse model spectrum\
-and have the index be free, default is True.",
+ and have the index be free, default is True.",
                 nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
     
     parser.add_argument("-wd","--write_directory",type=str,default='',
                 help="Directory to write the output ds9 region file in if not the current working directory\
-or if you are specifying the full path to the newly made XML file.")
+ or if you are specifying the full path to the newly made XML file.")
     
     parser.add_argument("-ON","--use_old_names",type=mybool,default=False,
                 help="Flag to use the make2FLGxml style naming convention, underscore before name and no spaces,\
-default is False.",nargs="?",const=True,
+ default is False.",nargs="?",const=True,
                 choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
     
     parser.add_argument('-DR',type=int,default=3,help='Choice of data release, 3 for 4FGL-DR3, 2 for 4FGL-DR2, and 1 for 4FGL.',
                 choices=[1,2,3])
+
+    parser.add_argument('--new',type=str,default=None,help='RA, DEC, source_name, and model for a non-4FGL point source to be\
+ added to the model.  Must be a string contained within single quotes with keys in double quotes.')
     
     args=parser.parse_args()
 
@@ -161,5 +164,37 @@ default is False.",nargs="?",const=True,
                   args.sigma_to_free,args.variable_free,args.force_point_sources,
                   args.extended_catalog_names,args.make_region,args.region_file,
                   args.galactic_index_free,args.use_old_names)
+
+    #check if a non-4FGL source should be added
+    if args.new is not None:
+        import json
+
+        #try to load the input dictionary, be ready to catch an exception
+        #if the correct usage of ' and " is not followed and fix it
+        try:
+            new_source=json.loads(args.new)
+
+        #swap out single quotes for double quotes
+        except json.decoder.JSONDecodeError:
+            alter_new=args.new.replace("'",'"')
+            new_source=json.loads(alter_new)
+
+        #make sure that we have the 4 required keys
+        if {['RA','DEC','source_name','model']}.issubset(new_source.keys()):
+
+            #use the add_point_source method, assume that since things are
+            #being called from the script we should overwrite the XML model
+            #and .reg files just made with the versions including the new source
+            source_list.add_point_source(source_name=new_source.get('source_name'),
+                                         RA=new_source.get('RA'),
+                                         DEC=new_source.get('DEC'),
+                                         spectrum_model=new_source.get('model'),
+                                         update_reg=args.make_region)
+
+        else:
+            print(f'Information for non-4FGL point source provided does not have the\
+ correct keys\nExpected: ["RA","DEC","source_name","model"]\nReceived: {list(new_source.keys())}.')
+            print('Cannot add new point source.')
+
     
 if __name__=='__main__': cli()
