@@ -120,26 +120,28 @@ class SourceList:
         '''
         
         #some sanity checks on input values
-        ##if not os.path.exists(catalog_file):
         if not Path(catalog_file).exists():
             raise FileNotFoundError(2,'Could not access catalog file',catalog_file)
-        
-        ##if os.path.exists(output_name):
-            ##warnings.warn(f'Region XML model {output_name} already exists, will be overwritten\
- ##(note, some systems may be case-insensitive).')
 
         if DR not in [1,2,3,4]:
             raise ValueError(f'{DR = } is an invalid choice of data release, must be 1, 2, 3, or 4.')
 
         self.catalog_file=Path(catalog_file)
-        ##self.output_name=os.path.join(write_directory,output_name)
-        ##self.write_directory=write_directory
 
-        self.write_directory=Path(write_directory)
-        self.output_name=self.write_directory/output_name
+        #if the write_directory is not specified, allow that it may have been
+        #specified as the parent directory of output_name
+        if write_directory=='':
+            self.output_name=Path(output_name)
+            self.write_directory=self.output_name.parent
+
+        #otherwise, get the write directory first and assume that the
+        #desired file should be relative to that directory
+        else:
+            self.write_directory=Path(write_directory)
+            self.output_name=self.write_directory/output_name
 
         if self.output_name.exists():
-            warnings.warn(f'REgion XML model {str(self.output_name)} already exists, will be\
+            warnings.warn(f'Region XML model {str(self.output_name)} already exists, will be\
  overwritten if you call the make_model method.')
         
         self.DR=DR
@@ -148,8 +150,6 @@ class SourceList:
                               else 21.666 if DR==2 \
                               else 18.475
         
-        #self.fermi_dir=os.getenv('FERMI_DIR')
-
         #get the region of inerest information
         #either directly from a list passed in
         if isinstance(ROI,list):
@@ -157,7 +157,6 @@ class SourceList:
 
         #or from the header of an eventfile
         #passed in
-        ###elif os.path.exists(ROI):
         elif Path(ROI).exists():
             self.ROI=get_ROI_from_event_file(ROI)
 
@@ -252,12 +251,10 @@ class SourceList:
             becomes _4FGLJ####.#+####)
         '''
 
-        ##if os.path.dirname(galactic_file)=='':
         if str(Path(galactic_file).parent)=='.':
             #for writing to the XML file, working with a string is easier
             galactic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',galactic_file])
 
-        ##if os.path.dirname(isotropic_file)=='':
         if str(Path(isotropic_file).parent)=='.':
             isotropic_file=os.sep.join(['$(FERMI_DIR)','refdata','fermi','galdiffuse',isotropic_file])
 
@@ -302,10 +299,6 @@ class SourceList:
         if make_region:
             #if name not specified, construct from output_name value
             if region_file is None or region_file=='':
-                ##region_file=os.path.basename(self.output_name).split('.')[:-1]
-                ###allow that '.' might be in the name beyond just giving the extenstion
-                ##region_file=reduce(lambda s1,s2:s1+s2,region_file).join(['ROI_','.reg'])
-
                 #change the suffix
                 region_file=self.output_name.with_suffix('.reg').name
 
@@ -313,7 +306,6 @@ class SourceList:
                 region_file='ROI_'+region_file
 
             #construct the full path to the file
-            ###self.region_file=os.path.join(self.write_directory,region_file)
             self.region_file=self.write_directory/region_file
 
             #and create the .reg file
@@ -331,7 +323,6 @@ class SourceList:
         
         print(f'Creating spatial and spectral model from the 4FGL DR-{self.DR} catalog: {str(self.catalog_file)}.')
         
-        ##if os.path.basename(self.catalog_file).split('.')[-1].lower()=='xml':
         if self.catalog_file.suffix.lower()=='.xml':
             self.get_sources_xml()
         else:
@@ -494,10 +485,6 @@ class SourceList:
         #put all of this in a string and write to output file
         out_string=filter(lambda s: len(s) and not s.isspace(),
                   output_xml.toprettyxml(' ').splitlines(True))
-
-        ###with open(self.output_name,'w') as output_file:
-        ##with self.output_name.open('w') as output_file:
-           ##output_file.write(''.join(out_string))
 
         self.output_name.write_text(''.join(out_string))
 
@@ -825,7 +812,6 @@ class SourceList:
         '''
         
         #first, do a check on the model to make sure it exists
-        ##if not os.path.exists(self.output_name):
         if not self.output_name.exists():
             raise RuntimeError(f'{str(self.output_name)} has not been created yet,\
  cannot use add_source until make_model has been successfully run.')
@@ -833,18 +819,15 @@ class SourceList:
         #assume the model is in the same directory as the
         #existing model, add the full path information
         if new_model_name is not None:
-            ##if os.path.dirname(new_model_name)=='':
+            NewName=True
+            
             if str(Path(new_model_name).parent)=='.':
-                ##new_model_name=os.path.join(\
-                    ##os.path.dirname(self.output_name),
-                    ##new_model_name)
                 new_model_name=self.output_name.parent/new_model_name
                 
                 warnings.warn('Assuming same save directory as main model.')
             elif not isinstance(new_model_name,Path):
                 new_model_name=Path(new_model_name)
 
-            ##if os.path.exists(new_model_name):
             if new_model_name.exists():
                 if overwrite:
                     warnings.warn(f'File {str(new_model_name)} exists, will be overwritten.')
@@ -856,6 +839,7 @@ class SourceList:
         else:
             if overwrite:
                 new_model_name=self.output_name
+                NewName=False
                 warnings.warn('No new file name given, will overwrite existing model.')
 
             else:
@@ -913,15 +897,13 @@ class SourceList:
         out_string=filter(lambda s: len(s) and not s.isspace(),
                   output_xml.toprettyxml(' ').splitlines(True))
 
-        ##with open(new_model_name,'w') as output_file:
-            ##output_file.write(''.join(out_string))
-
         new_model_name.write_text(''.join(out_string))
 
         print(f'{source_name} added to model, saved as {str(new_model_name)}')
 
-        self.output_name=new_model_name
-        print('SourceList object attribute "output_name" now points to new file')
+        if NewName:
+            self.output_name=new_model_name
+            print('SourceList object attribute "output_name" now points to new file')
 
         #now, if requested, update the ds9-style .reg file
         if update_reg:

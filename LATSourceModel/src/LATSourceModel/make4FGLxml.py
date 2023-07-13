@@ -180,7 +180,7 @@ def cli():
             new_source=json.loads(alter_new)
 
         #make sure that we have the 4 required keys
-        if {['RA','DEC','source_name','model']}.issubset(new_source.keys()):
+        if {'RA','DEC','source_name','model'}.issubset(new_source.keys()):
 
             #use the add_point_source method, assume that since things are
             #being called from the script we should overwrite the XML model
@@ -189,7 +189,8 @@ def cli():
                                          RA=new_source.get('RA'),
                                          DEC=new_source.get('DEC'),
                                          spectrum_model=new_source.get('model'),
-                                         update_reg=args.make_region)
+                                         update_reg=args.make_region,
+                                         overwrite=True)
 
         else:
             print(f'Information for non-4FGL point source provided does not have the\
