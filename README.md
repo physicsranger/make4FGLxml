@@ -15,7 +15,7 @@ The script now requires the ```pandas``` module, which can easily be installed w
 ## Installation
 STAY TUNED! I've done test installs using the TestPyPI server and everything seems to be good, but I have not yet released things through the regular PyPI server yet.  Currently, you can clone the repo and make sure that the LATSourceModel/src directory is in your PYTHONPATH if you want to test things out.
 
-**EVENTUAL INSTRUCTIONS***
+**EVENTUAL INSTRUCTIONS**
 Simply install the LATSourceModel package via pip:
 
 ```bash
