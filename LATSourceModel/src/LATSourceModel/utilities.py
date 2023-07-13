@@ -193,7 +193,7 @@ def build_region(region_file_name,sources):
             entry+=f"color = {color[source['free']]} "
             
         #add the name and write to file
-        entry+=f"text={ {source_name} }\n"
+        entry+=f"text={{{source_name}}}\n"
         region_lines+=entry
 
     Path(region_file_name).write_text(region_lines)
@@ -247,7 +247,7 @@ def add_to_reg_file(region_file,source_name,source_spatial,spectral_model,extend
 
             new_line+=f"{shape} 15 color = cyan "
 
-        new_line+=f"text = { {source_name} }\n"
+        new_line+=f"text = {{{source_name}}}\n"
         
         #cet the current .reg file lines
         region_lines=Path(region_file).read_text(encoding='UTF-8')
