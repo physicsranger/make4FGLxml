@@ -110,6 +110,12 @@ class Spectrum:
       Index2=2.3,Beta=0.2,Prefactor_free=True,Index1_free=True,Scale_free=False,
       BreakValue_free=True,Index2_free=True,Beta_free=True,model=None)
         create parameter dictionaries corresponding to SmoothBrokenPowerLaw spectral model
+    
+    Raises
+    ------
+    ValueError
+        if requested spectral model in not in the function dictionary,
+        raise an error
     '''
     
     def __init__(self,model,**kwargs):
@@ -127,6 +133,10 @@ class Spectrum:
         self.spectrum=self.document.createElement('spectrum')
 
         self.get_function_dictionary()
+
+         #do some checks on the input
+        if model not in self.functions.keys():
+            raise ValueError('{model = } not implemented')
 
         self.parameters=self.functions[model](**kwargs)
 
@@ -191,6 +201,11 @@ class Spectrum:
             recommended to set this to True
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Prefactor and Scale inputs are invalid choices, raise an error
         '''
 
         #some checks on input values
@@ -249,6 +264,10 @@ class Spectrum:
             flag to set the Index2 parameter free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        If Prefactor or BreakValue inputs are invalid, raise an error
         '''
 
         #do some sanity checks on the input values
@@ -316,6 +335,12 @@ class Spectrum:
             recommended to set this flag to True
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Integral, LowerLimit, or UpperLimit input values are invalid,
+            raise an error
         '''
         
         #some checks on the inputs
@@ -396,6 +421,12 @@ class Spectrum:
             recommended to set this flag to True
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Integral, LowerLimit, UpperLimit, or BreakValue inputs are
+            invalid, raise an error
         '''
         
         #some checks on the inputs
@@ -481,6 +512,12 @@ class Spectrum:
             flag to set the Beta parameter free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if the Prefactor, BreakValue, or Scale parameters are invalid,
+            raise an error
         '''
         
 
@@ -567,6 +604,12 @@ class Spectrum:
             flag to set the P3 parameter free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Prefactor, Scale, or Ebreak inputs are invalid, raise
+            an error
         '''
         
         #some checks on the inputs
@@ -650,6 +693,11 @@ class Spectrum:
             flag to set the P1 parameter free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Prefactor, BreakValue, or Eabs inputs are invalid, raise an error
         '''
         
         #some checks on the inputs
@@ -726,6 +774,12 @@ class Spectrum:
             recommended to set this flag to True
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Prefactor, Scale, Cutoff, or Index2 inputs are invalid, raise
+            an error
         '''
         
         #some checks on the inputs
@@ -796,6 +850,12 @@ class Spectrum:
             recommended to set this flag to True
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+
+        Raises
+        ------
+        ValueError
+            if Prefactor, Scale, or Index2 inputs are invalid, raise
+            an error
         '''
         
         #some checks on the inputs
@@ -866,6 +926,12 @@ class Spectrum:
             recommended to set this flag to True
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Prefactor, Scale, or Index2 inputs are invalid, raise
+            an error
         '''
         
         #some checks on the inputs
@@ -936,6 +1002,11 @@ class Spectrum:
             recommended to set this flag to True
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Prefactor, Scale, or Index2 inputs is invalid, raise an error
         '''
         
         #some checks on the inputs
@@ -1000,6 +1071,11 @@ class Spectrum:
             flag to set the Eb parameter free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if norm, alpha, or Eb inputs are invalid, raise an error
         '''
         
         #some checks on the inputs
@@ -1056,6 +1132,12 @@ class Spectrum:
             flag to set the Sigma parameter Free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Prefactor, Mean, or Sigma inputs are invalid, raise
+            an error
         '''
 
         #some checks on the inputs
@@ -1099,6 +1181,11 @@ class Spectrum:
             flag to set the Value parameter free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if Value input is invalid, raise an error
         '''
 
         #quick check on the Value parameter
@@ -1144,7 +1231,12 @@ class Spectrum:
         Ep_free - bool
             flag to set the Ep parameter free
         model - None-type or str
-            model name, not used, included only for **kwargs compatability            
+            model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if norm or Ep inputs are invalid, raise an error
         '''
 
         #some checks on the inputs
@@ -1219,6 +1311,11 @@ class Spectrum:
             flag to set the channel1 parameter free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        ValueError
+            if norm input is invalid, raise an error
         '''
 
         self.spectrum_file=str(spectrum_file)
@@ -1289,6 +1386,15 @@ class Spectrum:
             flag to set the Normalization parameter free
         model - None-type or str
             model name, not used, included only for **kwargs compatability
+        
+        Raises
+        ------
+        TypeError
+            if apply_edisp input is not str, bool, int, or float type, raise an error
+        ValueError
+            if Normalization input is invalid, raise an error
+            if apply_edisp is a str but not 'true' or 'false' (case insensitive),
+              raise an error
         '''
         
         #some checks on the inputs
@@ -1393,6 +1499,12 @@ class Spatial:
         **kwargs - dict or other keyword arguments
             keyword arguments corresponding to the necessary parameters of
             the input spatial_model
+        
+        Raises
+        ------
+        ValueError
+            if requested spatial_model is not in the function dictionary,
+            raise an error
         '''
 
         #create document and document element
@@ -1438,6 +1550,12 @@ class Spatial:
         spatial_model - None-type or str
             name of the spatial model, not used but necessary for
             kwargs functionality
+        
+        Raises
+        ------
+        ValueError
+            if input RA or DEC value is outside of valid ranges, raise
+            an error
         '''
         
         #do some sanity checks on the inputs
@@ -1476,6 +1594,11 @@ class Spatial:
         spatial_model - None-type or str
             name of the spatial model, not used but necessary for
             kwargs functionality
+        
+        Raises
+        ------
+        ValueError
+            if RA, DEC, or Radius inputs are invalid, raise an error
         '''
 
         #do some sanity checks, including converting Radius to float
@@ -1521,6 +1644,11 @@ class Spatial:
         spatial_model - None-type or str
             name of the spatial model, not used but necessary for
             kwargs functionality
+        
+        Raises
+        ------
+        ValueError
+            if RA, DEC, Sigma inputs are invalid, raise an error
         '''
         
         #do some sanity checks, including converting Sigma to a float
@@ -1563,6 +1691,11 @@ class Spatial:
         spatial_model - None-type or str
             name of the spatial model, not used but necessary for
             kwargs functionality
+        
+        Raises
+        ------
+        ValueError
+            if Prefactor input is invalid, raise an error
         '''
 
         #quick check on input
@@ -1590,6 +1723,11 @@ class Spatial:
         Parameters
         ----------
         Value - float or string
+
+        Raises
+        ------
+        ValueError
+            if Value input is invalid, raise an error
         '''
         
         #check on inputs
@@ -1621,6 +1759,11 @@ class Spatial:
         spatial_model - None-type or str
             name of the spatial model, not used but necessary for
             kwargs functionality
+        
+        Raises
+        ------
+        ValueError
+            if Normalization input is invalid, raise an error
         '''
         
         #check on input value

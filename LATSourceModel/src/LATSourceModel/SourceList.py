@@ -117,6 +117,15 @@ class SourceList:
         write_directory: str
             path to directory in which to save "output_name", if not specified
             will default to the current directory
+        
+        Raises
+        ------
+        FileNotFoundError
+            if catalog_file passed in does not exists, raises  an error
+            if getting region of interest information from a LAT event file and
+              file does not exist, raises an error
+        ValueError
+            if data release version requested is not in [1,2,3,4], raises an error
         '''
         
         #some sanity checks on input values
@@ -337,6 +346,11 @@ class SourceList:
         the sources attribute of the SourceList object (requires get_sources_fits
         or get_sources_xml method to have been called first) also adds the
         isotropic and Galactic diffuse emission components
+
+        Raises
+        ------
+        RuntimeError
+            logic to catch an unexpected state and throw an error if we get there
         '''
         
         #keep track of point and extended sources
@@ -809,6 +823,16 @@ class SourceList:
         new_reg_file : str, Path-like, or None-type
             name of or path to new ds9-style .reg file with new source
             added, if None-type will attempt to overwrite old_reg_file
+        
+        Raises
+        ------
+        RuntimeError
+            if the make_model method has not been called yet and the output
+              XML file does not exist, raise an error
+            if attempting to overwrite an exisiting file and ovewrite flag is
+              False, raise an error
+            if the input spatial and/or spectral information is not in the correct
+              format and/or is missing required keys, raise an error
         '''
         
         #first, do a check on the model to make sure it exists
