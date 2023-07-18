@@ -13,9 +13,6 @@ The script now requires the ```pandas``` module, which can easily be installed w
 ---
 
 ## Installation
-STAY TUNED! I've done test installs using the TestPyPI server and everything seems to be good, but I have not yet released things through the regular PyPI server yet.  Currently, you can clone the repo and make sure that the LATSourceModel/src directory is in your PYTHONPATH if you want to test things out.
-
-**EVENTUAL INSTRUCTIONS**
 Simply install the LATSourceModel package via pip:
 
 ```bash
@@ -152,28 +149,22 @@ source_list.add_point_source(source_name='NewSource',RA=123.45,DEC=-12.345,new_m
 ### Using the Command Line Interface
 When the LATSourceModel package is installed, it also creates an executable from the make4FGLxml.py script.  On Mac and Linux, this executable is simply ```make4FGLxml```, on Windows this will be ```make4FGLxml.exe```.  Note, after installing, you may need to open a new terminal to actually find and be able to use the executable.
 
-Using the executable from the command line follows the format below:
-
-```bash
-make4FGLxml --options
-```
-
 The command line options are almost entirely the same, with the same names, as those described in the section for how to use the script in an interactive session or your own script.  The only difference is in how the ROI information is entered. To get the ROI information from a _Fermi_ LAT event file (in this case we'll assume it is called my\_LAT\_events.fits and is in the current directory), use a command similar to:
 
 ```bash
-make4FGLxml /some/path/to/gll_psc_v28.xml --event_file my_LAT_events.fits --options
+make4FGLxml /some/path/to/gll_psc_v28.xml --event_file my_LAT_events.fits
 ```
 
 To instead provide the ROI information directly (here we will center at (RA,DEC) = (120.3 deg., 30.5 deg.) with a 15 degree radius), use a command similar to:
 
 ```bash
-make4FGLxml /some/path/to/gll_psc_v31.fits --RA 120.3 --DEC 30.5 --radius 15 --options
+make4FGLxml /some/path/to/gll_psc_v31.fits --RA 120.3 --DEC 30.5 --radius 15
 ```
 
-When specifying optional arguments (represented by ```--options``` in the example commands above)  you can use the same names as in the interactive example, preceded by two dashes.  Some options do have shortened identifiers preceded by only one dash.  To see all the options and help text, simply use the command:
+When specifying additional optional arguments on the command line you can use the same names as in the interactive example, preceded by two dashes (e.g., ```--norms_free_only True```).  Some options do have shortened identifiers preceded by only one dash.  To see all the options and help text, simply use the command:
 
 ```bash
-make4FGLxmly --help
+make4FGLxml --help
 ```
 
 The user can add a single point source when creating a model via the command line interface.  To add a point source with a PowerLaw spectral model at (RA,DEC) = (123.45,-12.345) named MySource, use commands similar to:
