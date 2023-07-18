@@ -99,7 +99,7 @@ Note, if the ```new_model_name``` argument is not specified, the code will attem
 
 The code will use sensible default values for the spectral parameters, but it is likely the user may want to adjust the parameters of 'NewSource' before running their likelihood analysis (this can be done via the BinnedAnalysis or UnbinnedAnalysis object so it doesn't necessarily take us back to a text editor).
 
-If the user wants a different spectral model, such as PLSuperExpCutoff4, they can specify ```spectrum_model='PLSuperExtCutoff4'``` in the ```add_point_source``` method call.  All spectral models described on the Fermi Science Support Center [model definitions page](https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html) are supported (a list of available models can be imported via ```from LATSourceModel.utilities import spectral_models```).  If the user doesn't want to use the defaults parameter values, they can instead supply a dictionary with parameter names and values as shown below:
+If the user wants a different spectral model, such as PLSuperExpCutoff4, they can specify ```spectrum_model='PLSuperExtCutoff4'``` in the ```add_point_source``` method call.  All spectral models described on the Fermi Science Support Center [model definitions page](https://fermi.gsfc.nasa.gov/ssc/data/analysis/scitools/source_models.html) are supported (a list of available models can be imported via ```from LATSourceModel.utilities import spectral_models```).  If the user doesn't want to use the default parameter values, they can instead supply a dictionary with parameter names and values as shown below:
 
 ```python
 spectrum_info={'model':'PLSuperExpCutoff4',
