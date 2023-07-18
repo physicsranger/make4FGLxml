@@ -47,7 +47,7 @@ source_list=SourceList(catalog_file='/some/path/to/gll_psc_v31.fit',ROI='my_even
 
 #or...
 
-#using a list with ROI information adn the XML version of the catalog
+#using a list with ROI information and the XML version of the catalog
 source_list=SourceList(catalog_file='/some/path/to/gll_psc_v28.xml',[123.4,-32.2,15],
                        output_name='my_LAT_model.xml',
                        write_directory='/some/path/to/analysis/directory')
@@ -65,7 +65,7 @@ Once this object is created, the only thing left do is call the ```make_model```
  * _sigma\_to\_free_ (float, optional): minimum average significance (test statistic), if using the FITS (XML) catalog, a source must have to consider setting parameters free
  * _variable\_free_ (bool, optional): flag to free the normalization parameters of sources found to be significantly variable, even if the source does not meet significance requirements or is > _free\_radius_ degrees but $\leq$ _max\_free\_radius_ away from the ROI center, default is True
  * _force\_point\_sources_ (bool, optional): flag to include extended sources as point sources in the model, default is False
- * _extended\_catalog\_names_ (bool, optional): flag to use the "4FGL JXXXX.X+XXXXe" names for extended sources, default is False, note that this only applies when using the FITS version of the catalog, if you use teh XML version then the behavior is always as if this flag was set to True
+ * _extended\_catalog\_names_ (bool, optional): flag to use the "4FGL JXXXX.X+XXXXe" names for extended sources, default is False, note that this only applies when using the FITS version of the catalog, if you use the XML version then the behavior is always as if this flag was set to True
  * _make\_region_ (bool, optional): flag to also generate a ds9 region file, default is True
  * _region\_file_ (str, optional): name of output ds9 region file, will be written in _write\_directory_, if not specified it will prepend 'ROI_' to _output\_name_ and change the extension to '.reg'
  * _galactic\_index\_free_ (bool, optional): flag to modify the spectrum of the Galactic diffuse emission using a power-law model with free Index parameter, default is True
