@@ -176,7 +176,7 @@ def build_region(region_file_name,sources):
     color=('magenta','green')
 
     region_lines='# Region file format: DS9\n'
-    region_lines+='# Created by make4FGLxml\n'
+    region_lines+='# Created by LATSourceModel/make4FGLxml\n'
     region_lines+='global font="roman 10 normal" move =0\n'
 
     #cycle through the sources dictionary
