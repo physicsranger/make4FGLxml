@@ -1101,7 +1101,7 @@ class Spectrum:
         self.parameters.append({'free':int(alpha_free),'name':'alpha','minimum':0,
                      'maximum':max(5,self.alpha*1.5),'scale':1,'value':self.alpha})
 
-        self.parameters.append({'free':int(beta_free),'name':'beata','minimum':min(-5,self.beta*1.5),
+        self.parameters.append({'free':int(beta_free),'name':'beta','minimum':min(-5,self.beta*1.5),
                      'maximum':max(10,self.beta*1.5),'scale':1,'value':self.beta})
 
         self.parameters.append({'free':int(Eb_free),'name':'Eb','minimum':min(10,self.Eb*0.9),
