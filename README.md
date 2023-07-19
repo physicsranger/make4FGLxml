@@ -19,7 +19,7 @@ Simply install the LATSourceModel package via pip:
 pip install LATSourceModel
 ````
 
-This will include the ```make4FGLxml``` executable somewhere your ```PATH``` can find.
+This will include the ```make4FGLxml``` executable somewhere your ```PATH``` can find.  If desired, the user can activate the _fermitools_ anaconda environment first and then run the previous command, installing this package only in that environment (though it is possible the package will need to be reinstalled upon updating to a newer release of _fermitools_.)
 
 ---
 
