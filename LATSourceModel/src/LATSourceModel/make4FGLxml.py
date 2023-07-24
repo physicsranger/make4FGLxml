@@ -83,7 +83,7 @@ def cli():
                 ,help="Flag to only let the normalizations of parameters be free, default is False.",
                 nargs="?",const=True,choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
     
-    parser.add_argument("-e","--extended_directory",type=str,default='',
+    parser.add_argument("-e","--extended_directory",type=str,default=None,
                 help="Path to directory with LAT extended source templates, will default to STs default.")
     
     parser.add_argument("-r","--free_radius",type=float,default=-1.,
