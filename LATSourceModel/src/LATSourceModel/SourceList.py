@@ -659,8 +659,10 @@ class SourceList:
                                                source_info('LP_Index'),
                                                source_info('LP_beta'),
                                                source_info('PLEC_Flux_Density'),
-                                               source_info(('PLEC_IndexS' if self.DR==3 else 'PLEC_Index')),
-                                               source_info(('PLEC_ExpfactorS' if self.DR==3 else 'PLEC_Expfactor')),
+                                               source_info('PLEC_IndexS' if \
+                                               self.DR in [3,4] else 'PLEC_Index'),
+                                               source_info('PLEC_ExpfactorS' if \
+                                               self.DR in [3,4] else 'PLEC_Expfactor'),
                                                source_info('PLEC_Exp_Index'),
                                                [model.strip() for model in source_info('SpectrumType')]],
                                          columns=['RA','DEC','Signif_Avg','Variability_Index',
@@ -736,7 +738,7 @@ class SourceList:
                      'Eb':row.Pivot_Energy})])
 
             else:
-                if self.DR==3:
+                if self.DR in [3,4]:
                     self.sources[name].update([('spectrum',
                         {'model':'PLSuperExpCutoff4',
                          'Prefactor':row.PLEC_Flux_Density,
@@ -750,7 +752,7 @@ class SourceList:
                     #do it here and not in the PLSuperExpCutoff2 Spectrum class function
                     self.sources[name].update([('spectrum',
                         {'model':'PLSuperExpCutoff2',
-                         'Prefactor':row.PLEC_Flux_Density*np.exp(row.Expfactor*row.Pivot_Energy**row.PLEC_Index2),
+                         'Prefactor':row.PLEC_Flux_Density*np.exp(row.PLEC_Expfactor*row.Pivot_Energy**row.PLEC_Index2),
                          'Index1':row.PLEC_Index1,
                          'Scale':row.Pivot_energy,
                          'Expfactor':row.PLEC_Expfactor,
