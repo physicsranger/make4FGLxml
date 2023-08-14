@@ -2,6 +2,8 @@
 
 An updated version of the make4FGLxml.py script previously available all as a single file from the [FSSC User Contributions](https://fermi.gsfc.nasa.gov/ssc/data/analysis/user/).  This update represents a major restructuring of the code to improve performance, readability, and documentation.  The update also includes new features and eventually a GUI.
 
+> The latest version is _1.10.8_, this version fixes a bug first noticed by Xian Hou affecting the PLSuperExpCutoff4 model sources in DR-4, only when using the FITS version of the catalog.
+
 The package is used to produce XML spatial-spectral models of gamma-ray sources within a specified region of the sky for analysis of _Fermi_ LAT data.  If you have previous experience with the script (pre-GitHub), consider this version 1.10.6 (or v01r10p06 using my old syntax).
 
 For those familiar with earlier versions of the script, the [previous instructions](https://fermi.gsfc.nasa.gov/ssc/data/analysis/user/readme_make4FGLxml.txt) are still mostly valid, with the major changes being in some argument names, the main class is called ```SourceList``` instead of ```srcList```, the classes and functions are contained in a package called ```LATSourceModel```, and you can now add sources not in a 4FGL catalog to the source model without having to manually edit the XML file in a text editor.
