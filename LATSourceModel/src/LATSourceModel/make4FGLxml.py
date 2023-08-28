@@ -138,7 +138,7 @@ def cli():
                 choices=['True','False','T','F','t','f','TRUE','FALSE','true','false',1,0])
     
     parser.add_argument('-DR',type=int,default=3,help='Choice of data release, 3 for 4FGL-DR3, 2 for 4FGL-DR2, and 1 for 4FGL.',
-                choices=[1,2,3])
+                choices=[1,2,3,4])
 
     parser.add_argument('--new',type=str,default=None,help='RA, DEC, source_name, and model for a non-4FGL point source to be\
  added to the model.  Must be a string contained within single quotes with keys in double quotes.')
