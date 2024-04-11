@@ -478,6 +478,13 @@ class SourceList:
                        Index_free=self.galactic_index_free)
         galactic_spatial=Spatial(spatial_model='MapCubeFunction',spatial_file=self.galactic_file)
 
+        #quick way to set the Galactic Index bounds properly
+        for param in galactic_spectrum.spectrum.getElementsByTagName('parameter'):
+            if param.getAttribute('name') == 'Index':
+                param.setAttribute('min', '-1')
+                param.setAttribute('max', '1')
+                param.setAttribute('scale', '1')
+
         Galactic.appendChild(galactic_spectrum.spectrum)
         Galactic.appendChild(galactic_spatial.spatial)
 
