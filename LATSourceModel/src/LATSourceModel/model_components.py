@@ -1248,7 +1248,7 @@ class Spectrum:
         self.norm_scale=10**np.floor(np.log10(norm))
         self.norm=norm/self.norm_scale
         self.alpha=alpha
-        self.beta=beata
+        self.beta=beta
         self.Ep=Ep
 
         #assign a couple more useful attributes
