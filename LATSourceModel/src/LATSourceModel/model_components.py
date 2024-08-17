@@ -650,10 +650,10 @@ class Spectrum:
                      'maximum':max(300,self.P1*1.5),'scale':1,'value':self.P1})
 
         self.parameters.append({'free':int(P2_free),'name':'P2','minimum':-1,'maximum':1,
-                     'scale':1,value:self.P2})
+                     'scale':1, 'value':self.P2})
 
         self.parameters.append({'free':int(P3_free),'name':'P3','minimum':-1,'maximum':1,
-                     'scale':1,value:self.P3})
+                     'scale':1, 'value':self.P3})
 
         #now build the spectrum document element
         self.build()
