@@ -5,7 +5,8 @@ from LATSourceModel.utilities import (
         build_region,
         valid_spatial_input,
         valid_spectrum_input,
-        add_to_reg_file)
+        add_to_reg_file,
+        float_conversion)
 
 #model_components imports
 from LATSourceModel.model_components import (
@@ -591,8 +592,8 @@ class SourceList:
                 self.sources[name].update([('Extended',False)])
 
             #evaluate variability and significance threshold info
-            self.sources[name].update([('variable',float(source.getAttribute('Variability_Index'))>=self.variability_threshold),
-                ('significant',float(source.getAttribute('TS_value'))>=self.sigma_to_free)])
+            self.sources[name].update([('variable',float_conversion(source.getAttribute('Variability_Index'))>=self.variability_threshold),
+                                       ('significant',float_conversion(source.getAttribute('TS_value'))>=self.sigma_to_free)])
 
             #now get the spectrum information
             spectrum=source.getElementsByTagName('spectrum')
