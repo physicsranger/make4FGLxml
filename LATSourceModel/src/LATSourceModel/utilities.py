@@ -22,6 +22,30 @@ spectral_models=['PowerLaw','LogParabola','PLSuperExpCutoff4',
 spatial_models=['SkyDir','RadialDisk','RadialGaussian','SpatialMap',
                 'ConstantValue','MapCubeFunction']
 
+def float_conversion(parameter, default=0):
+    '''
+    function to convert a string parameter to a float, accounting for
+    the cases where values from the XML version of the catalog are empty
+    string (e.g., Crab nebula components which are not fit in the catalog
+    analysis)
+
+    Parameters
+    ----------
+    parameter - str
+        the parameter from either XML value to be converted to a float
+    default - float
+        the default value to use if the input parameter is an empty string
+
+    Returns
+    -------
+    float
+        the converted parameter
+    '''
+    try:
+        return float(parameter)
+    except ValueError:
+        return default
+
 #copied from Damien's macro
 #Create an XML document parameter description element
 def parameter_element(free,name,maximum,minimum,scale,value):
