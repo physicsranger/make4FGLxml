@@ -2,4 +2,4 @@
 #from .model_components import *
 from .SourceList import SourceList
 
-__version__='1.10.10'
+__version__='1.10.11'
